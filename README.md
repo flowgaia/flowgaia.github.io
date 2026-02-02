@@ -182,15 +182,21 @@ The audio player logic is in `scripts/player.js`. The `AudioPlayer` class handle
 
 ## Deployment
 
-This site is deployed to GitHub Pages at **https://flowgaia.github.io**
+This site automatically deploys to GitHub Pages at **https://flowgaia.github.io**
 
-### Quick Deploy
+### Automatic Deployment
+
+Every push to `main` triggers automatic deployment via GitHub Actions:
 
 ```bash
-./deploy.sh
+git add .
+git commit -m "Your changes"
+git push origin main
 ```
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+✨ That's it! GitHub Actions handles the rest.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed setup instructions.
 
 ## Copyright & License
 

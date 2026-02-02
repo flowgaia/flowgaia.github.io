@@ -21,10 +21,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/sacred-theme.css">
-    <link rel="stylesheet" href="styles/player.css">
+    <!-- Cache Busting: Add timestamp to prevent stale assets -->
+    <script>
+        (function() {
+            const timestamp = new Date().getTime();
+            document.write('<link rel="stylesheet" href="styles/main.css?t=' + timestamp + '">');
+            document.write('<link rel="stylesheet" href="styles/sacred-theme.css?t=' + timestamp + '">');
+            document.write('<link rel="stylesheet" href="styles/player.css?t=' + timestamp + '">');
+        })();
+    </script>
 
     <!-- js-yaml from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
@@ -150,10 +155,20 @@
     </footer>
 
     <!-- Scripts - Load in order: Model, View, Controller, App -->
-    <script src="scripts/playback-state.js"></script>
-    <script src="scripts/player-view.js"></script>
-    <script src="scripts/config-loader.js"></script>
-    <script src="scripts/player.js"></script>
-    <script src="scripts/app.js"></script>
+    <script>
+        (function() {
+            const timestamp = new Date().getTime();
+            const scripts = [
+                'scripts/playback-state.js',
+                'scripts/player-view.js',
+                'scripts/config-loader.js',
+                'scripts/player.js',
+                'scripts/app.js'
+            ];
+            scripts.forEach(src => {
+                document.write('<script src="' + src + '?t=' + timestamp + '"><\/script>');
+            });
+        })();
+    </script>
 </body>
 </html>

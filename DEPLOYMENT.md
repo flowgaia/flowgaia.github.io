@@ -1,12 +1,20 @@
 # FlowGaia Deployment Guide
 
-This guide explains how to deploy the FlowGaia static site to GitHub Pages.
+This guide explains how to deploy the FlowGaia static site to GitHub Pages using automated GitHub Actions.
 
 ## Prerequisites
 
 - Git installed
 - GitHub account with access to create repositories
 - Command line access
+
+## How Deployment Works
+
+**Automatic deployment via GitHub Actions:**
+- Every push to the `main` branch automatically triggers deployment
+- GitHub Actions builds and deploys your site to GitHub Pages
+- No manual deployment steps required!
+- See deployment status in the "Actions" tab on GitHub
 
 ## Initial Setup (One-time)
 
@@ -28,41 +36,24 @@ git remote add origin https://github.com/flowgaia/flowgaia.github.io.git
 git remote -v
 ```
 
-### 3. Initial Commit and Push
+### 3. Initial Push
 
 ```bash
-# Stage all files
-git add .
-
-# Create initial commit
-git commit -m "Initial commit: FlowGaia Sacred Music Web App
-
-- Complete music player with Howler.js
-- Album-based navigation
-- Playback controls (speed, loop, volume)
-- Responsive design with sacred aesthetic
-- State persistence across sessions
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-
-# Push to GitHub
+# Push to GitHub (this will trigger automatic deployment)
 git push -u origin main
 ```
 
-### 4. Enable GitHub Pages (if needed)
-
-GitHub Pages should automatically enable for `<username>.github.io` repositories, but to verify:
+### 4. Configure GitHub Pages
 
 1. Go to your repository on GitHub
 2. Click **Settings** → **Pages**
-3. Ensure:
-   - Source is set to **Deploy from a branch**
-   - Branch is set to **main** and **/ (root)**
-4. Click **Save** if needed
+3. Under "Build and deployment":
+   - Source: **GitHub Actions**
+4. The site will automatically deploy via the workflow
 
 ## Regular Deployment
 
-After the initial setup, use the deployment script for updates:
+Deployment is **fully automatic**! Just commit and push:
 
 ```bash
 # Make changes to your code
@@ -74,15 +65,16 @@ git add .
 # Commit with descriptive message
 git commit -m "Description of your changes"
 
-# Deploy using the script
-./deploy.sh
-```
-
-Or manually:
-
-```bash
+# Push to GitHub - deployment happens automatically!
 git push origin main
 ```
+
+### Monitoring Deployment
+
+1. Go to your repository on GitHub
+2. Click the **Actions** tab
+3. Watch the deployment progress in real-time
+4. Green checkmark = successful deployment ✅
 
 ## Accessing Your Site
 

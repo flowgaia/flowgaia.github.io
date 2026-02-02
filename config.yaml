@@ -26,7 +26,7 @@ albums:
         subtitle: "Lullaby"
         artist: "Flow Gaia"
         audio: "assets/audio/ashes-into-light.mp3"
-        image: "assets/images/songs/ashes-into-light.svg"
+        image: "assets/images/songs/ashes-into-light.png"
         copyright: "FlowGaia"
         year: 2026
         description: "A gentle lullaby guiding transformation from darkness into radiant light"
@@ -36,7 +36,7 @@ albums:
         title: "Heaven Now"
         artist: "Flow Gaia"
         audio: "assets/audio/heaven-now.mp3"
-        image: "assets/images/songs/heaven-now.svg"
+        image: "assets/images/songs/heaven-now.png"
         copyright: "FlowGaia"
         year: 2026
         description: "Experience the divine in this present moment"
@@ -46,7 +46,7 @@ albums:
         title: "Here and Now"
         artist: "Flow Gaia"
         audio: "assets/audio/here-and-now.mp3"
-        image: "assets/images/songs/here-and-now.svg"
+        image: "assets/images/songs/here-and-now.png"
         copyright: "FlowGaia"
         year: 2026
         description: "Grounding into the eternal now"
@@ -56,7 +56,7 @@ albums:
         title: "I Love Myself"
         artist: "Flow Gaia"
         audio: "assets/audio/i-love-myself.mp3"
-        image: "assets/images/songs/i-love-myself.svg"
+        image: "assets/images/songs/i-love-myself.png"
         copyright: "FlowGaia"
         year: 2026
         description: "A celebration of self-love and acceptance"
@@ -66,7 +66,7 @@ albums:
         title: "No Script"
         artist: "Flow Gaia"
         audio: "assets/audio/no-script.mp3"
-        image: "assets/images/songs/no-script.svg"
+        image: "assets/images/songs/no-script.png"
         copyright: "FlowGaia"
         year: 2026
         description: "Living authentically without a predetermined script"
@@ -95,7 +95,7 @@ albums:
         subtitle: "Bass Bump"
         artist: "Flow Gaia"
         audio: "assets/audio/hollow-men-bass-bump.mp3"
-        image: "assets/images/songs/hollow-men-bass-bump.svg"
+        image: "assets/images/songs/hollow-men-bass-bump.jpg"
         copyright: "FlowGaia"
         year: 2026
         description: "Deep bass-driven remix exploring the hollow spaces"
@@ -106,7 +106,7 @@ albums:
         subtitle: "Disco Latte"
         artist: "Flow Gaia"
         audio: "assets/audio/hollow-men-disco-latte.mp3"
-        image: "assets/images/songs/hollow-men-disco-latte.svg"
+        image: "assets/images/songs/hollow-men-disco-latte.jpg"
         copyright: "FlowGaia"
         year: 2026
         description: "Smooth disco vibes with a touch of emptiness"
@@ -117,7 +117,7 @@ albums:
         subtitle: "Disco Slap"
         artist: "Flow Gaia"
         audio: "assets/audio/hollow-men-disco-slap.mp3"
-        image: "assets/images/songs/hollow-men-disco-slap.svg"
+        image: "assets/images/songs/hollow-men-disco-slap.jpg"
         copyright: "FlowGaia"
         year: 2026
         description: "Sharp, punchy disco remix with attitude"
@@ -128,7 +128,7 @@ albums:
         subtitle: "Funky Slap Unhinged"
         artist: "Flow Gaia"
         audio: "assets/audio/hollow-men-funky-slap-unhinged.mp3"
-        image: "assets/images/songs/hollow-men-funky-slap-unhinged.svg"
+        image: "assets/images/songs/hollow-men-disco-slap-unhinged.jpg"
         copyright: "FlowGaia"
         year: 2026
         description: "Chaotic funk energy unleashed - no rules, pure groove"

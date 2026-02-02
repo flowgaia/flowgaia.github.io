@@ -35,19 +35,12 @@ class App {
             // Set albums first (this ensures we always have an album selected)
             this.player.state.setAlbums(albums);
 
-            // Store all songs in the model for filtering
-            this.player.state.allSongs = allSongs;
-
             // Check which album is selected
             const selectedAlbumId = this.player.state.getSelectedAlbum();
             console.log('📂 Selected album:', selectedAlbumId);
 
-            // Get songs for the selected album only
-            const albumSongs = this.player.state.getFilteredSongs();
-            console.log('🎵 Album songs:', albumSongs.length);
-
-            // Set playlist to the selected album's songs
-            this.player.setPlaylist(albumSongs);
+            // Set playlist with ALL songs - setPlaylist will filter to selected album
+            this.player.setPlaylist(allSongs);
 
             // Now render songs with the selected album
             this.renderSongs();
