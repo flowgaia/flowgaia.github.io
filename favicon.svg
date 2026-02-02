@@ -1,0 +1,30 @@
+<!--
+  FlowGaia Favicon
+  Copyright © 2026 FlowGaia. All rights reserved.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="favicon-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2D1B4E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4A3269;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="favicon-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#C9A961;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#C9A961;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="8" fill="url(#favicon-bg)"/>
+
+  <!-- Glow -->
+  <circle cx="32" cy="32" r="28" fill="url(#favicon-glow)"/>
+
+  <!-- Stylized "FG" monogram -->
+  <g fill="#C9A961" font-family="Cinzel, serif" font-weight="700">
+    <text x="32" y="44" font-size="36" text-anchor="middle">FG</text>
+  </g>
+
+  <!-- Sacred circle accent -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#C9A961" stroke-width="0.5" opacity="0.4"/>
+</svg>

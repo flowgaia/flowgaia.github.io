@@ -1,0 +1,51 @@
+<!--
+  Hollow Men Album Cover
+  Copyright © 2026 FlowGaia. All rights reserved.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <linearGradient id="bg-hollow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A0F2E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2D1B4E;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="void-center" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#0A0515;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2D1B4E;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="800" height="800" fill="url(#bg-hollow)"/>
+
+  <!-- Void in center -->
+  <circle cx="400" cy="400" r="200" fill="url(#void-center)"/>
+
+  <!-- Hollow figures -->
+  <g opacity="0.3" fill="none" stroke="#C9A961" stroke-width="2">
+    <!-- Left figure -->
+    <circle cx="280" cy="350" r="30"/>
+    <line x1="280" y1="380" x2="280" y2="480"/>
+    <line x1="280" y1="410" x2="250" y2="450"/>
+    <line x1="280" y1="410" x2="310" y2="450"/>
+    <line x1="280" y1="480" x2="250" y2="530"/>
+    <line x1="280" y1="480" x2="310" y2="530"/>
+
+    <!-- Right figure -->
+    <circle cx="520" cy="350" r="30"/>
+    <line x1="520" y1="380" x2="520" y2="480"/>
+    <line x1="520" y1="410" x2="490" y2="450"/>
+    <line x1="520" y1="410" x2="550" y2="450"/>
+    <line x1="520" y1="480" x2="490" y2="530"/>
+    <line x1="520" y1="480" x2="550" y2="530"/>
+  </g>
+
+  <!-- Title -->
+  <text x="400" y="680" font-family="Cinzel, serif" font-size="56" font-weight="700"
+        fill="#C9A961" text-anchor="middle" letter-spacing="3">
+    Hollow Men
+  </text>
+
+  <text x="400" y="730" font-family="Cormorant Garamond, serif" font-size="28"
+        fill="#F5F3ED" text-anchor="middle" opacity="0.8">
+    Flow Gaia
+  </text>
+</svg>

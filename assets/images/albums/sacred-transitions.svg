@@ -1,0 +1,49 @@
+<!--
+  Sacred Transitions Album Cover
+  Copyright © 2026 FlowGaia. All rights reserved.
+  Unauthorized copying, distribution, or modification is prohibited.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2D1B4E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4A3269;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#C9A961;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#C9A961;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="800" fill="url(#bg)"/>
+  
+  <!-- Glow effect -->
+  <circle cx="400" cy="400" r="300" fill="url(#glow)"/>
+  
+  <!-- Sacred geometry - Flower of Life inspired -->
+  <g opacity="0.4" stroke="#C9A961" stroke-width="2" fill="none">
+    <circle cx="400" cy="400" r="100"/>
+    <circle cx="400" cy="400" r="150"/>
+    <circle cx="400" cy="400" r="200"/>
+    
+    <!-- Six petals -->
+    <circle cx="400" cy="300" r="100"/>
+    <circle cx="486.6" cy="350" r="100"/>
+    <circle cx="486.6" cy="450" r="100"/>
+    <circle cx="400" cy="500" r="100"/>
+    <circle cx="313.4" cy="450" r="100"/>
+    <circle cx="313.4" cy="350" r="100"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="400" y="680" font-family="Cinzel, serif" font-size="48" font-weight="600"
+        fill="#C9A961" text-anchor="middle" letter-spacing="3">
+    Sacred Transitions
+  </text>
+  
+  <text x="400" y="720" font-family="Cormorant Garamond, serif" font-size="24"
+        fill="#F5F3ED" text-anchor="middle" opacity="0.7">
+    Flow Gaia
+  </text>
+</svg>

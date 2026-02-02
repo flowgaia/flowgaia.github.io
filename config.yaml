@@ -1,0 +1,135 @@
+# FlowGaia Sacred Music Configuration
+#
+# Copyright © 2026 FlowGaia. All rights reserved.
+#
+# This configuration file and all associated assets are licensed
+# under the copyright of FlowGaia.
+# Unauthorized copying, distribution, or modification is prohibited.
+
+site:
+  title: "FlowGaia"
+  subtitle: "Sacred Music for the Soul"
+  description: "Journey through transformative soundscapes"
+  copyright: "© 2026 FlowGaia. All rights reserved."
+
+albums:
+  - id: "love-what-is"
+    title: "Love What Is"
+    artist: "Flow Gaia"
+    year: 2026
+    description: "A journey of self-acceptance and present-moment awareness"
+    cover: "assets/images/albums/love-what-is.png"
+    copyright: "FlowGaia"
+    songs:
+      - id: "ashes-into-light"
+        title: "Ashes into Light"
+        subtitle: "Lullaby"
+        artist: "Flow Gaia"
+        audio: "assets/audio/ashes-into-light.mp3"
+        image: "assets/images/songs/ashes-into-light.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "A gentle lullaby guiding transformation from darkness into radiant light"
+        tags: ["meditative", "lullaby", "transformation"]
+
+      - id: "heaven-now"
+        title: "Heaven Now"
+        artist: "Flow Gaia"
+        audio: "assets/audio/heaven-now.mp3"
+        image: "assets/images/songs/heaven-now.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Experience the divine in this present moment"
+        tags: ["uplifting", "presence", "spiritual"]
+
+      - id: "here-and-now"
+        title: "Here and Now"
+        artist: "Flow Gaia"
+        audio: "assets/audio/here-and-now.mp3"
+        image: "assets/images/songs/here-and-now.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Grounding into the eternal now"
+        tags: ["meditative", "grounding", "mindfulness"]
+
+      - id: "i-love-myself"
+        title: "I Love Myself"
+        artist: "Flow Gaia"
+        audio: "assets/audio/i-love-myself.mp3"
+        image: "assets/images/songs/i-love-myself.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "A celebration of self-love and acceptance"
+        tags: ["affirming", "self-love", "healing"]
+
+      - id: "no-script"
+        title: "No Script"
+        artist: "Flow Gaia"
+        audio: "assets/audio/no-script.mp3"
+        image: "assets/images/songs/no-script.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Living authentically without a predetermined script"
+        tags: ["freedom", "authentic", "liberation"]
+
+      - id: "the-dream-is-yours"
+        title: "The Dream is Yours"
+        artist: "Flow Gaia"
+        audio: "assets/audio/the-dream-is-yours.mp3"
+        image: "assets/images/songs/the-dream-is-yours.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Claim your power to dream and create your reality"
+        tags: ["empowering", "manifestation", "creative"]
+
+  - id: "hollow-men"
+    title: "Hollow Men"
+    artist: "Flow Gaia"
+    year: 2026
+    description: "Four remixes exploring emptiness and groove - from bass to disco to funky chaos"
+    cover: "assets/images/albums/hollow-men.png"
+    copyright: "FlowGaia"
+    songs:
+      - id: "hollow-men-bass-bump"
+        title: "Hollow Men"
+        subtitle: "Bass Bump"
+        artist: "Flow Gaia"
+        audio: "assets/audio/hollow-men-bass-bump.mp3"
+        image: "assets/images/songs/hollow-men-bass-bump.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Deep bass-driven remix exploring the hollow spaces"
+        tags: ["remix", "bass", "groove"]
+
+      - id: "hollow-men-disco-latte"
+        title: "Hollow Men"
+        subtitle: "Disco Latte"
+        artist: "Flow Gaia"
+        audio: "assets/audio/hollow-men-disco-latte.mp3"
+        image: "assets/images/songs/hollow-men-disco-latte.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Smooth disco vibes with a touch of emptiness"
+        tags: ["remix", "disco", "smooth"]
+
+      - id: "hollow-men-disco-slap"
+        title: "Hollow Men"
+        subtitle: "Disco Slap"
+        artist: "Flow Gaia"
+        audio: "assets/audio/hollow-men-disco-slap.mp3"
+        image: "assets/images/songs/hollow-men-disco-slap.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Sharp, punchy disco remix with attitude"
+        tags: ["remix", "disco", "energetic"]
+
+      - id: "hollow-men-funky-slap-unhinged"
+        title: "Hollow Men"
+        subtitle: "Funky Slap Unhinged"
+        artist: "Flow Gaia"
+        audio: "assets/audio/hollow-men-funky-slap-unhinged.mp3"
+        image: "assets/images/songs/hollow-men-funky-slap-unhinged.svg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Chaotic funk energy unleashed - no rules, pure groove"
+        tags: ["remix", "funk", "experimental"]
