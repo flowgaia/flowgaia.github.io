@@ -19,7 +19,19 @@ class ConfigLoader {
      */
     async load() {
         try {
-            const response = await fetch(this.configPath);
+            // Add cache-busting timestamp to prevent stale configs
+            const timestamp = new Date().getTime();
+            const configUrl = `${this.configPath}?t=${timestamp}`;
+
+            const response = await fetch(configUrl, {
+                cache: 'no-store', // Prevent browser caching
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+
             if (!response.ok) {
                 throw new Error(`Failed to load config: ${response.statusText}`);
             }

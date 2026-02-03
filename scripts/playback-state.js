@@ -19,7 +19,7 @@ class PlaybackState {
         this.isMuted = false;
         this.isPlaying = false;
         this.playbackRate = 1.0; // 0.5 to 2.0
-        this.loop = false; // Loop playlist
+        this.repeatMode = 'off'; // 'off', 'all', 'one'
         this.selectedAlbumId = null; // Will be set to first album by default
 
         // Load persisted state
@@ -251,18 +251,38 @@ class PlaybackState {
     }
 
     /**
-     * Set loop state
+     * Set repeat mode
      */
-    setLoop(loop) {
-        this.loop = loop;
-        this.persist();
+    setRepeatMode(mode) {
+        if (['off', 'all', 'one'].includes(mode)) {
+            this.repeatMode = mode;
+            this.persist();
+        }
     }
 
     /**
-     * Get loop state
+     * Get repeat mode
+     */
+    getRepeatMode() {
+        return this.repeatMode;
+    }
+
+    /**
+     * Cycle to next repeat mode
+     */
+    cycleRepeatMode() {
+        const modes = ['off', 'all', 'one'];
+        const currentIndex = modes.indexOf(this.repeatMode);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        this.setRepeatMode(modes[nextIndex]);
+        return this.repeatMode;
+    }
+
+    /**
+     * Legacy: Get loop state (for backwards compatibility)
      */
     getLoop() {
-        return this.loop;
+        return this.repeatMode === 'all';
     }
 
     /**
@@ -355,7 +375,7 @@ class PlaybackState {
             volume: this.volume,
             isMuted: this.isMuted,
             playbackRate: this.playbackRate,
-            loop: this.loop,
+            repeatMode: this.repeatMode,
             selectedAlbumId: this.selectedAlbumId,
             timestamp: Date.now()
         };
@@ -383,8 +403,12 @@ class PlaybackState {
                 if (state.playbackRate !== undefined) {
                     this.playbackRate = state.playbackRate;
                 }
-                if (state.loop !== undefined) {
-                    this.loop = state.loop;
+                // Handle both new repeatMode and legacy loop
+                if (state.repeatMode !== undefined) {
+                    this.repeatMode = state.repeatMode;
+                } else if (state.loop !== undefined) {
+                    // Backwards compatibility: convert old boolean loop to repeatMode
+                    this.repeatMode = state.loop ? 'all' : 'off';
                 }
                 // Only restore selectedAlbumId if it's a valid non-null value
                 if (state.selectedAlbumId) {
@@ -444,6 +468,66 @@ class PlaybackState {
         }
 
         return null;
+    }
+
+    /**
+     * Mark song as downloaded
+     */
+    markSongDownloaded(songId, size) {
+        const downloads = this.getDownloadMetadata();
+        downloads[songId] = {
+            size: size,
+            downloadedAt: new Date().toISOString()
+        };
+        localStorage.setItem('flowgaia_downloads', JSON.stringify(downloads));
+        console.log('💾 Marked song as downloaded:', songId);
+    }
+
+    /**
+     * Check if song is downloaded
+     */
+    isSongDownloaded(songId) {
+        const downloads = this.getDownloadMetadata();
+        return downloads[songId] !== undefined;
+    }
+
+    /**
+     * Get list of downloaded song IDs
+     */
+    getDownloadedSongIds() {
+        const downloads = this.getDownloadMetadata();
+        return Object.keys(downloads);
+    }
+
+    /**
+     * Remove song from download metadata
+     */
+    removeSongDownloaded(songId) {
+        const downloads = this.getDownloadMetadata();
+        delete downloads[songId];
+        localStorage.setItem('flowgaia_downloads', JSON.stringify(downloads));
+        console.log('💾 Removed song from downloads:', songId);
+    }
+
+    /**
+     * Get download metadata
+     */
+    getDownloadMetadata() {
+        try {
+            const stored = localStorage.getItem('flowgaia_downloads');
+            return stored ? JSON.parse(stored) : {};
+        } catch (error) {
+            console.error('Error loading download metadata:', error);
+            return {};
+        }
+    }
+
+    /**
+     * Clear all download metadata
+     */
+    clearDownloadMetadata() {
+        localStorage.removeItem('flowgaia_downloads');
+        console.log('💾 Download metadata cleared');
     }
 
     /**

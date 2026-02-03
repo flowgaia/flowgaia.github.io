@@ -18,8 +18,49 @@ class AudioPlayer {
         // Progress update interval
         this.progressInterval = null;
 
+        // Storage manager (will be set by App)
+        this.storageManager = null;
+
+        // Current blob URL (needs cleanup)
+        this.currentBlobUrl = null;
+
+        // Event listeners for external components
+        this.listeners = {};
+
         this.initializeEventListeners();
         this.initializeFromState();
+    }
+
+    /**
+     * Add event listener
+     */
+    on(event, callback) {
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
+        }
+        this.listeners[event].push(callback);
+    }
+
+    /**
+     * Emit event
+     */
+    emit(event, data) {
+        if (this.listeners[event]) {
+            this.listeners[event].forEach(callback => {
+                try {
+                    callback(data);
+                } catch (error) {
+                    console.error(`Error in ${event} listener:`, error);
+                }
+            });
+        }
+    }
+
+    /**
+     * Set storage manager for offline playback
+     */
+    setStorageManager(storageManager) {
+        this.storageManager = storageManager;
     }
 
     /**
@@ -29,7 +70,7 @@ class AudioPlayer {
         this.view.updateVolume(this.state.getVolume());
         this.view.updateVolumeButton(this.state.getMuted(), this.state.getVolume());
         this.view.updateSpeed(this.state.getPlaybackRate());
-        this.view.updateLoop(this.state.getLoop());
+        this.view.updateRepeatMode(this.state.getRepeatMode());
     }
 
     /**
@@ -104,9 +145,9 @@ class AudioPlayer {
     }
 
     /**
-     * Load a song
+     * Load a song (check cache first, fallback to streaming)
      */
-    loadSong(song, autoplay = false, startPosition = 0) {
+    async loadSong(song, autoplay = false, startPosition = 0) {
         if (!song) return;
 
         console.log('📀 Loading:', song.title, 'at position:', startPosition);
@@ -117,12 +158,63 @@ class AudioPlayer {
             this.howl.unload();
         }
 
+        // Cleanup previous blob URL
+        if (this.currentBlobUrl) {
+            URL.revokeObjectURL(this.currentBlobUrl);
+            this.currentBlobUrl = null;
+        }
+
         // Update view
         this.view.updateNowPlaying(song);
 
+        // Emit song changed event for external listeners (e.g., App)
+        this.emit('songchanged', { song });
+
+        // Check if song is cached (offline mode)
+        let audioSrc = song.audio;
+        let isOffline = false;
+        let audioFormat = null;
+
+        if (this.storageManager) {
+            try {
+                const cachedAudio = await this.storageManager.getAudio(song.id);
+                if (cachedAudio && cachedAudio.blob) {
+                    // Create blob URL from cached audio
+                    this.currentBlobUrl = URL.createObjectURL(cachedAudio.blob);
+                    audioSrc = this.currentBlobUrl;
+                    isOffline = true;
+
+                    // Extract format from mimeType (e.g., "audio/mpeg" -> "mp3")
+                    if (cachedAudio.mimeType) {
+                        const formatMap = {
+                            'audio/mpeg': 'mp3',
+                            'audio/mp3': 'mp3',
+                            'audio/wav': 'wav',
+                            'audio/ogg': 'ogg',
+                            'audio/webm': 'webm',
+                            'audio/aac': 'aac',
+                            'audio/flac': 'flac',
+                            'audio/m4a': 'm4a'
+                        };
+                        audioFormat = formatMap[cachedAudio.mimeType] || 'mp3';
+                    }
+
+                    console.log('📥 Playing from cache (offline mode), format:', audioFormat);
+                } else {
+                    console.log('📡 Streaming from network');
+                }
+            } catch (error) {
+                console.error('❌ Error checking cache:', error);
+                // Fallback to streaming
+            }
+        }
+
+        // Update offline indicator in view
+        this.view.updateOfflineStatus(isOffline);
+
         // Create new Howler instance
-        this.howl = new Howl({
-            src: [song.audio],
+        const howlOptions = {
+            src: [audioSrc],
             html5: true,
             volume: this.state.getVolume() / 100,
             mute: this.state.getMuted(),
@@ -148,6 +240,12 @@ class AudioPlayer {
             },
             onloaderror: (id, error) => {
                 console.error('❌ Load error:', error);
+                // If offline mode failed, try streaming
+                if (isOffline) {
+                    console.log('🔄 Retrying with network stream...');
+                    this.view.updateOfflineStatus(false);
+                    this.loadSong(song, autoplay, startPosition);
+                }
             },
             onplay: () => {
                 console.log('▶️ Playing');
@@ -163,7 +261,14 @@ class AudioPlayer {
             },
             onend: () => {
                 console.log('⏹️ Ended');
-                this.playNext();
+                // Check if repeat one is enabled
+                if (this.state.getRepeatMode() === 'one') {
+                    console.log('🔂 Repeat one - replaying current song');
+                    this.howl.seek(0);
+                    this.howl.play();
+                } else {
+                    this.playNext();
+                }
             },
             onstop: () => {
                 console.log('⏹️ Stopped');
@@ -171,7 +276,15 @@ class AudioPlayer {
                 this.view.updatePlayPauseButton(false);
                 this.stopProgressUpdates();
             }
-        });
+        };
+
+        // Add format option if playing from cache (blob URL needs explicit format)
+        if (isOffline && audioFormat) {
+            howlOptions.format = [audioFormat];
+        }
+
+        // Instantiate Howl with options
+        this.howl = new Howl(howlOptions);
     }
 
     /**
@@ -223,18 +336,18 @@ class AudioPlayer {
         const currentIndex = this.state.getCurrentIndex();
         const playlistLength = this.state.getPlaylist().length;
         const isLastSong = currentIndex >= playlistLength - 1;
-        const loopEnabled = this.state.getLoop();
+        const repeatMode = this.state.getRepeatMode();
 
         console.log('⏭️ playNext called:', {
             currentIndex,
             playlistLength,
             isLastSong,
-            loopEnabled
+            repeatMode
         });
 
-        if (isLastSong && !loopEnabled) {
-            // At the end and not looping - stop playback completely
-            console.log('🏁 End of album (loop disabled) - stopping playback');
+        if (isLastSong && repeatMode === 'off') {
+            // At the end and not repeating - stop playback completely
+            console.log('🏁 End of album (repeat off) - stopping playback');
             if (this.howl) {
                 this.howl.stop();
             }
@@ -243,8 +356,8 @@ class AudioPlayer {
             return;
         }
 
-        if (isLastSong && loopEnabled) {
-            console.log('🔁 End of album (loop enabled) - wrapping to start');
+        if (isLastSong && repeatMode === 'all') {
+            console.log('🔁 End of album (repeat all) - wrapping to start');
         }
 
         const song = this.state.next();
@@ -315,14 +428,18 @@ class AudioPlayer {
     }
 
     /**
-     * Toggle loop
+     * Cycle through repeat modes (off -> all -> one -> off)
      */
     toggleLoop() {
-        const newLoop = !this.state.getLoop();
-        this.state.setLoop(newLoop);
-        this.view.updateLoop(newLoop);
+        const newMode = this.state.cycleRepeatMode();
+        this.view.updateRepeatMode(newMode);
 
-        console.log('🔁 Loop:', newLoop ? 'enabled' : 'disabled');
+        const modeLabels = {
+            'off': 'Repeat off',
+            'all': 'Repeat all',
+            'one': 'Repeat one'
+        };
+        console.log('🔁', modeLabels[newMode]);
     }
 
     /**

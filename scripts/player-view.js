@@ -28,7 +28,8 @@ class PlayerView {
             muteIcon: document.querySelector('.mute-icon'),
             speedBtn: document.getElementById('speed-btn'),
             speedLabel: document.querySelector('.speed-label'),
-            loopBtn: document.getElementById('loop-btn')
+            loopBtn: document.getElementById('loop-btn'),
+            offlineIndicator: document.getElementById('offline-indicator')
         };
 
         this.isSeeking = false;
@@ -146,14 +147,63 @@ class PlayerView {
     }
 
     /**
-     * Update loop button state
+     * Update repeat mode button
+     */
+    updateRepeatMode(mode) {
+        if (!this.elements.loopBtn) return;
+
+        // Remove all mode classes
+        this.elements.loopBtn.classList.remove('active', 'repeat-all', 'repeat-one');
+
+        // Update button based on mode
+        const btn = this.elements.loopBtn;
+
+        if (mode === 'off') {
+            // No active state, default icon
+            btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                </svg>
+            `;
+            btn.title = 'Repeat: Off';
+        } else if (mode === 'all') {
+            // Active state with repeat all icon
+            btn.classList.add('active', 'repeat-all');
+            btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                </svg>
+            `;
+            btn.title = 'Repeat: All';
+        } else if (mode === 'one') {
+            // Active state with repeat one icon
+            btn.classList.add('active', 'repeat-one');
+            btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                    <text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">1</text>
+                </svg>
+            `;
+            btn.title = 'Repeat: One';
+        }
+    }
+
+    /**
+     * Legacy: Update loop button state (for backwards compatibility)
      */
     updateLoop(isLooping) {
-        if (this.elements.loopBtn) {
-            if (isLooping) {
-                this.elements.loopBtn.classList.add('active');
+        this.updateRepeatMode(isLooping ? 'all' : 'off');
+    }
+
+    /**
+     * Update offline status indicator
+     */
+    updateOfflineStatus(isOffline) {
+        if (this.elements.offlineIndicator) {
+            if (isOffline) {
+                this.elements.offlineIndicator.style.display = 'inline-block';
             } else {
-                this.elements.loopBtn.classList.remove('active');
+                this.elements.offlineIndicator.style.display = 'none';
             }
         }
     }

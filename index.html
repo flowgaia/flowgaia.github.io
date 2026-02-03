@@ -16,10 +16,18 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlowGaia">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Cache Busting: Add timestamp to prevent stale assets -->
     <script>
@@ -76,6 +84,12 @@
                 <div class="song-info">
                     <div class="song-title" id="player-title">No song playing</div>
                     <div class="song-artist" id="player-artist"></div>
+                    <span class="offline-indicator" id="offline-indicator" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        Offline
+                    </span>
                 </div>
             </div>
 
@@ -96,7 +110,7 @@
                 </button>
                 <button class="control-btn" id="next-btn" aria-label="Next track" title="Next track">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M16 18h2V6h-2zm-11-7l8.5-6v12z"/>
+                        <path d="M6 6v12l8.5-6zm10 0v12h2V6z"/>
                     </svg>
                 </button>
             </div>
@@ -147,14 +161,95 @@
         <div class="copyright-info" id="player-copyright"></div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div class="modal confirmation-modal" id="confirmation-modal" style="display: none;">
+        <div class="modal-overlay" id="confirmation-modal-overlay"></div>
+        <div class="confirmation-modal-content">
+            <div class="confirmation-icon" id="confirmation-icon"></div>
+            <h3 id="confirmation-title"></h3>
+            <p id="confirmation-message"></p>
+            <div class="confirmation-actions">
+                <button class="btn btn-secondary" id="confirmation-cancel">Cancel</button>
+                <button class="btn btn-primary" id="confirmation-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Artwork Modal -->
+    <div class="modal artwork-modal" id="artwork-modal" style="display: none;">
+        <div class="modal-overlay" id="artwork-modal-overlay"></div>
+        <div class="artwork-modal-content">
+            <button class="modal-close" id="artwork-modal-close" aria-label="Close">×</button>
+            <img id="artwork-modal-image" src="" alt="Album artwork">
+            <div class="artwork-modal-info">
+                <h3 id="artwork-modal-title"></h3>
+                <p id="artwork-modal-artist"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Management Modal -->
+    <div class="modal" id="storage-modal" style="display: none;">
+        <div class="modal-overlay" id="storage-modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Storage Management</h2>
+                <button class="modal-close" id="storage-modal-close" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="storage-stats">
+                    <div class="storage-info">
+                        <div class="stat">
+                            <span class="stat-label">Downloaded Songs:</span>
+                            <span class="stat-value" id="stat-song-count">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Storage Used:</span>
+                            <span class="stat-value" id="stat-storage-used">0 MB</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Available:</span>
+                            <span class="stat-value" id="stat-storage-available">0 MB</span>
+                        </div>
+                    </div>
+                    <div class="storage-bar">
+                        <div class="storage-bar-fill" id="storage-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <p class="storage-percent" id="storage-percent">0% used</p>
+                </div>
+
+                <div class="downloaded-songs-list">
+                    <h3>Downloaded Songs</h3>
+                    <div id="downloaded-songs-content">
+                        <p class="empty-message">No downloaded songs</p>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-danger" id="clear-all-downloads">Clear All Downloads</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
             <p id="site-copyright">© 2026 FlowGaia. All rights reserved.</p>
+            <button class="storage-btn" id="open-storage-modal">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3s-1.34 3-3 3h-1v2h1c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                    <path d="M12 13H7V11h5V13zm-2 4H7v-2h3V17z"/>
+                </svg>
+                Storage
+            </button>
         </div>
     </footer>
 
-    <!-- Scripts - Load in order: Model, View, Controller, App -->
+    <!-- Scripts - Load in order: Model, View, Storage, Controller, App -->
     <script>
         (function() {
             const timestamp = new Date().getTime();
@@ -162,6 +257,8 @@
                 'scripts/playback-state.js',
                 'scripts/player-view.js',
                 'scripts/config-loader.js',
+                'scripts/storage-manager.js',
+                'scripts/download-manager.js',
                 'scripts/player.js',
                 'scripts/app.js'
             ];

@@ -82,6 +82,111 @@ albums:
         description: "Claim your power to dream and create your reality"
         tags: ["empowering", "manifestation", "creative"]
 
+      - id: "resist-nothing-allow-everything"
+        title: "Resist Nothing, Allow Everything"
+        artist: "Flow Gaia"
+        audio: "assets/audio/resist-nothing-allow-everything.mp3"
+        image: "assets/images/albums/love-what-is.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Surrender into the flow of life without resistance"
+        tags: ["surrender", "acceptance", "flow"]
+
+      - id: "spotlight-divine"
+        title: "Spotlight Divine"
+        artist: "Flow Gaia"
+        audio: "assets/audio/spotlight-divine.mp3"
+        image: "assets/images/albums/love-what-is.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Bathed in divine light and grace"
+        tags: ["uplifting", "divine", "illumination"]
+
+      - id: "who-am-i"
+        title: "Who Am I?"
+        artist: "Flow Gaia"
+        audio: "assets/audio/who-am-i.mp3"
+        image: "assets/images/albums/love-what-is.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "The eternal question leading to self-discovery and awakening"
+        tags: ["inquiry", "self-discovery", "awakening"]
+
+      - id: "you-are-the-source-of-love"
+        title: "You Are the Source of Love"
+        artist: "Flow Gaia"
+        audio: "assets/audio/you-are-the-source-of-love.mp3"
+        image: "assets/images/albums/love-what-is.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Recognizing yourself as the infinite source of love"
+        tags: ["self-love", "realization", "source"]
+
+  - id: "bluebird"
+    title: "Bluebird"
+    artist: "Flow Gaia"
+    year: 2026
+    description: "Exploring freedom and the sharpness of awareness"
+    cover: "assets/images/albums/bluebird.png"
+    copyright: "FlowGaia"
+    songs:
+      - id: "bluebird"
+        title: "Bluebird"
+        artist: "Flow Gaia"
+        audio: "assets/audio/bluebird.mp3"
+        image: "assets/images/songs/bluebird.jpeg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Soaring free like a bluebird in endless sky"
+        tags: ["freedom", "lightness", "joy"]
+
+      - id: "blade-of-thought"
+        title: "Blade of Thought"
+        artist: "Flow Gaia"
+        audio: "assets/audio/blade-of-thought.mp3"
+        image: "assets/images/songs/blade-of-thought.jpeg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Sharp, cutting awareness that slices through illusion"
+        tags: ["awareness", "clarity", "insight"]
+
+  - id: "i-love-myself-album"
+    title: "I Love Myself"
+    artist: "Flow Gaia"
+    year: 2026
+    description: "Electronic celebration of radical self-love and acceptance"
+    cover: "assets/images/albums/i-love-myself-album.png"
+    copyright: "FlowGaia"
+    songs:
+      - id: "i-love-myself-electro"
+        title: "I Love Myself"
+        subtitle: "Electro"
+        artist: "Flow Gaia"
+        audio: "assets/audio/i-love-myself-electro.mp3"
+        image: "assets/images/songs/i-love-myself-electro.jpeg"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Electro remix amplifying the power of self-love"
+        tags: ["electro", "self-love", "upbeat"]
+
+  - id: "our-destiny"
+    title: "Our Destiny"
+    artist: "Flow Gaia"
+    year: 2026
+    description: "Journey into the infinite potential of our shared destiny"
+    cover: "assets/images/albums/our-destiny.png"
+    copyright: "FlowGaia"
+    songs:
+      - id: "you-belong"
+        title: "You Belong"
+        artist: "Flow Gaia"
+        audio: "assets/audio/you-belong.mp3"
+        image: "assets/images/songs/you-belong.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "A celebration of belonging and connection to all that is"
+        tags: ["belonging", "connection", "unity"]
+
   - id: "hollow-men"
     title: "Hollow Men"
     artist: "Flow Gaia"
