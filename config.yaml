@@ -187,6 +187,70 @@ albums:
         description: "A celebration of belonging and connection to all that is"
         tags: ["belonging", "connection", "unity"]
 
+      - id: "our-destiny"
+        title: "Our Destiny"
+        artist: "Flow Gaia"
+        audio: "assets/audio/our-destiny.mp3"
+        image: "assets/images/albums/our-destiny.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Starts with a pulsating disco bass groove and tight hi-hats, layered with swirling synths and wah-wah guitar. Builds through electric keys and phased pads to euphoric, melodic drops featuring lush strings and deep earth shaking bass. Groove-heavy, hypnotic, with playful sonic textures throughout."
+        tags: ["disco", "groove", "hypnotic"]
+
+      - id: "together-we-build-v1"
+        title: "Together"
+        subtitle: "Psychedelic Pump"
+        artist: "Flow Gaia"
+        audio: "assets/audio/together-we-build-v1.mp3"
+        image: "assets/images/albums/our-destiny.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Psychedelic disco pump with sweet drops."
+        tags: ["disco", "psychedelic", "dance"]
+
+      - id: "together-we-build-v4"
+        title: "Together"
+        subtitle: "Sweet Drops"
+        artist: "Flow Gaia"
+        audio: "assets/audio/together-we-build-v4.mp3"
+        image: "assets/images/albums/our-destiny.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Psychedelic disco pump with sweet drops."
+        tags: ["disco", "psychedelic", "dance"]
+
+      - id: "together-we-build-v5"
+        title: "Together"
+        subtitle: "Deep Groove"
+        artist: "Flow Gaia"
+        audio: "assets/audio/together-we-build-v5.mp3"
+        image: "assets/images/albums/our-destiny.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Starts with a pulsating disco bass groove and solid bass sounds, layered with swirling synths and wah-wah guitar. Builds through electric keys and phased pads to euphoric, melodic drops featuring lush strings and deep earth shaking bass. Groove-heavy, hypnotic, with playful sonic textures throughout."
+        tags: ["disco", "groove", "hypnotic"]
+
+      - id: "together-we-build-v7"
+        title: "Together"
+        subtitle: "Funky Slap"
+        artist: "Flow Gaia"
+        audio: "assets/audio/together-we-build-v7.mp3"
+        image: "assets/images/albums/our-destiny.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Funky slap bassline with hard drops and disco energy."
+        tags: ["funk", "disco", "slap bass"]
+
+      - id: "birthday-together"
+        title: "Birthday Together"
+        artist: "Flow Gaia"
+        audio: "assets/audio/birthday-together.mp3"
+        image: "assets/images/albums/our-destiny.png"
+        copyright: "FlowGaia"
+        year: 2026
+        description: "Funky bassline meets sexy psychobilly with disco flair and hard drops."
+        tags: ["funk", "psychobilly", "disco"]
+
   - id: "hollow-men"
     title: "Hollow Men"
     artist: "Flow Gaia"
@@ -238,3 +302,20 @@ albums:
         year: 2026
         description: "Chaotic funk energy unleashed - no rules, pure groove"
         tags: ["remix", "funk", "experimental"]
+
+  - id: "love-songs"
+    title: "Love Songs"
+    artist: "Flow Gaia"
+    year: 2026
+    description: "Songs of love, longing, and the heart's deepest feelings"
+    cover: "assets/images/albums/love-what-is.png"
+    copyright: "FlowGaia"
+    songs:
+      - id: "feelings-first"
+        title: "Feelings First"
+        artist: "Flow Gaia"
+        audio: "assets/audio/feelings-first.mp3"
+        image: "assets/images/albums/love-what-is.png"
+        copyright: "FlowGaia"
+        year: 2026
+        tags: ["love", "emotional"]

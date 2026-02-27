@@ -167,6 +167,10 @@ class AudioPlayer {
         // Update view
         this.view.updateNowPlaying(song);
 
+        // Update page title and OS media controls
+        this.updatePageTitle(song);
+        this.updateMediaSession(song);
+
         // Emit song changed event for external listeners (e.g., App)
         this.emit('songchanged', { song });
 
@@ -252,12 +256,18 @@ class AudioPlayer {
                 this.state.setPlaying(true);
                 this.view.updatePlayPauseButton(true);
                 this.startProgressUpdates();
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'playing';
+                }
             },
             onpause: () => {
                 console.log('⏸️ Paused');
                 this.state.setPlaying(false);
                 this.view.updatePlayPauseButton(false);
                 this.stopProgressUpdates();
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'paused';
+                }
             },
             onend: () => {
                 console.log('⏹️ Ended');
@@ -275,6 +285,9 @@ class AudioPlayer {
                 this.state.setPlaying(false);
                 this.view.updatePlayPauseButton(false);
                 this.stopProgressUpdates();
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = 'paused';
+                }
             }
         };
 
@@ -346,8 +359,15 @@ class AudioPlayer {
         });
 
         if (isLastSong && repeatMode === 'off') {
-            // At the end and not repeating - stop playback completely
-            console.log('🏁 End of album (repeat off) - stopping playback');
+            // Try to advance to the next album
+            const nextSong = this.state.switchToNextAlbum();
+            if (nextSong) {
+                console.log('⏭️ End of album - advancing to next album');
+                this.loadSong(nextSong, true);
+                return;
+            }
+            // No next album - stop playback completely
+            console.log('🏁 End of all albums - stopping playback');
             if (this.howl) {
                 this.howl.stop();
             }
@@ -437,7 +457,7 @@ class AudioPlayer {
         const modeLabels = {
             'off': 'Repeat off',
             'all': 'Repeat all',
-            'one': 'Repeat one'
+            'one': 'Repeat single'
         };
         console.log('🔁', modeLabels[newMode]);
     }
@@ -456,6 +476,18 @@ class AudioPlayer {
                 if (isFinite(position) && isFinite(duration)) {
                     this.state.setPosition(position);
                     this.view.updateProgress(position, duration);
+
+                    if ('mediaSession' in navigator && duration > 0) {
+                        try {
+                            navigator.mediaSession.setPositionState({
+                                duration,
+                                playbackRate: this.state.getPlaybackRate(),
+                                position
+                            });
+                        } catch (e) {
+                            // setPositionState not supported in all browsers
+                        }
+                    }
                 }
             }
         }, 250);
@@ -476,6 +508,65 @@ class AudioPlayer {
      */
     getCurrentSong() {
         return this.state.getCurrentSong();
+    }
+
+    /**
+     * Update the browser page title to show the current song
+     */
+    updatePageTitle(song) {
+        if (!song) return;
+        const fullTitle = song.subtitle
+            ? `${song.title} - ${song.subtitle}`
+            : song.title;
+        document.title = `${fullTitle} · FlowGaia`;
+    }
+
+    /**
+     * Update OS media session metadata and action handlers
+     */
+    updateMediaSession(song) {
+        if (!('mediaSession' in navigator)) return;
+
+        if (!song) {
+            navigator.mediaSession.metadata = null;
+            return;
+        }
+
+        const fullTitle = song.subtitle
+            ? `${song.title} - ${song.subtitle}`
+            : song.title;
+
+        const artworkUrl = song.image || song.album?.cover || '';
+        const artwork = artworkUrl ? [{ src: artworkUrl }] : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: fullTitle,
+            artist: song.artist || '',
+            album: song.album?.title || '',
+            artwork
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => this.play());
+        navigator.mediaSession.setActionHandler('pause', () => this.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', () => this.playPrevious());
+        navigator.mediaSession.setActionHandler('nexttrack', () => this.playNext());
+        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+            if (this.howl) {
+                const offset = details.seekOffset || 10;
+                this.howl.seek(Math.max(0, this.howl.seek() - offset));
+            }
+        });
+        navigator.mediaSession.setActionHandler('seekforward', (details) => {
+            if (this.howl) {
+                const offset = details.seekOffset || 10;
+                this.howl.seek(Math.min(this.howl.duration(), this.howl.seek() + offset));
+            }
+        });
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+            if (this.howl && details.seekTime !== undefined) {
+                this.howl.seek(details.seekTime);
+            }
+        });
     }
 
     /**

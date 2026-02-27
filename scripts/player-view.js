@@ -152,39 +152,20 @@ class PlayerView {
     updateRepeatMode(mode) {
         if (!this.elements.loopBtn) return;
 
-        // Remove all mode classes
-        this.elements.loopBtn.classList.remove('active', 'repeat-all', 'repeat-one');
-
-        // Update button based on mode
         const btn = this.elements.loopBtn;
+        btn.classList.remove('active', 'repeat-all', 'repeat-one');
 
-        if (mode === 'off') {
-            // No active state, default icon
-            btn.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-                </svg>
-            `;
-            btn.title = 'Repeat: Off';
-        } else if (mode === 'all') {
-            // Active state with repeat all icon
+        const labels = { off: '↻ Off', all: '↻ All', one: '↻ Single' };
+        const titles = { off: 'Repeat: Off', all: 'Repeat: All', one: 'Repeat: Single' };
+
+        btn.querySelector('.repeat-label').textContent = labels[mode] || labels.off;
+        btn.title = titles[mode] || titles.off;
+        btn.setAttribute('aria-label', titles[mode] || titles.off);
+
+        if (mode === 'all') {
             btn.classList.add('active', 'repeat-all');
-            btn.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-                </svg>
-            `;
-            btn.title = 'Repeat: All';
         } else if (mode === 'one') {
-            // Active state with repeat one icon
             btn.classList.add('active', 'repeat-one');
-            btn.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-                    <text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">1</text>
-                </svg>
-            `;
-            btn.title = 'Repeat: One';
         }
     }
 

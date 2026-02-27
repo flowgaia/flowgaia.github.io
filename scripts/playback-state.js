@@ -345,6 +345,30 @@ class PlaybackState {
     }
 
     /**
+     * Switch to the next album and return its first song, or null if already on the last album
+     */
+    switchToNextAlbum() {
+        const currentAlbumIndex = this.allAlbums.findIndex(a => a.id === this.selectedAlbumId);
+        if (currentAlbumIndex === -1 || currentAlbumIndex >= this.allAlbums.length - 1) {
+            return null; // Already on last album
+        }
+
+        const nextAlbum = this.allAlbums[currentAlbumIndex + 1];
+        this.setSelectedAlbum(nextAlbum.id);
+
+        if (this.playlist.length > 0) {
+            this.currentIndex = 0;
+            this.currentSong = this.playlist[0];
+            this.position = 0;
+            this.persist();
+            console.log('📀 Switched to next album:', nextAlbum.id, '→', this.currentSong.title);
+            return this.currentSong;
+        }
+
+        return null;
+    }
+
+    /**
      * Start auto-save interval
      */
     startAutoSave() {
