@@ -49,8 +49,3 @@
 .progress-bar {
   transition: width 0.1s linear;
 }
-
-/* Album card hover */
-.album-card:hover .album-overlay {
-  opacity: 1;
-}

@@ -60,21 +60,21 @@ export function renderAlbumGrid(albums) {
   grid.innerHTML = albums
     .map(
       (album) => `
-    <div class="album-card" data-album-id="${escapeAttr(album.id)}">
-      <div class="album-art">
+    <div class="album-card cursor-pointer rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors" data-album-id="${escapeAttr(album.id)}">
+      <div class="aspect-square w-full overflow-hidden bg-neutral-200 dark:bg-neutral-700">
         ${
           album.artwork_url
-            ? `<img src="${escapeAttr(album.artwork_url)}" alt="${escapeAttr(album.name)}" loading="lazy">`
-            : `<div class="album-art-placeholder">
-                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            ? `<img src="${escapeAttr(album.artwork_url)}" alt="${escapeAttr(album.name)}" loading="lazy" class="w-full h-full object-cover">`
+            : `<div class="w-full h-full flex items-center justify-center text-neutral-400 dark:text-neutral-600">
+                 <svg class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                  </svg>
                </div>`
         }
       </div>
-      <div class="album-info">
-        <div class="album-name">${escapeHtml(album.name)}</div>
-        <div class="album-artist">${escapeHtml(album.artist)}</div>
+      <div class="p-2">
+        <div class="text-sm font-medium truncate text-neutral-900 dark:text-neutral-100">${escapeHtml(album.name)}</div>
+        <div class="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">${escapeHtml(album.artist)}</div>
       </div>
     </div>
   `,
