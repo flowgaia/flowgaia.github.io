@@ -10,11 +10,11 @@ build: build-wasm
 	npm run build
 
 test:
-	cargo test --manifest-path rust-core/Cargo.toml
+	cargo test
 
 coverage:
 	cargo tarpaulin --manifest-path rust-core/Cargo.toml --out Xml --output-dir coverage --fail-under 90 --exclude-files "rust-core/src/lib.rs"
 
 clean:
 	rm -rf dist wasm node_modules coverage
-	cargo clean --manifest-path rust-core/Cargo.toml
+	cargo clean

@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "concurrently --kill-others \"npm run watch:wasm\" \"npm run dev:vite\"",
     "dev:vite": "vite",
-    "watch:wasm": "cargo watch -C rust-core --ignore pkg -s 'wasm-pack build rust-core --target web --out-dir ../wasm --dev'",
+    "watch:wasm": "chokidar 'rust-core/src/**/*.rs' 'rust-core/Cargo.toml' --initial -c 'wasm-pack build rust-core --target web --out-dir ../wasm --dev'",
     "build": "npm run build:wasm && vite build",
     "build:wasm": "wasm-pack build rust-core --target web --out-dir ../wasm",
     "preview": "vite preview",
-    "test:rust": "cargo test --manifest-path rust-core/Cargo.toml",
+    "test:rust": "cargo test",
     "test:coverage": "cargo tarpaulin --manifest-path rust-core/Cargo.toml --out Xml --output-dir coverage",
     "generate:music": "node scripts/generate-music-json.js",
     "prepare": "husky"
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
+    "chokidar-cli": "^3.0.0",
     "concurrently": "^8.2.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
