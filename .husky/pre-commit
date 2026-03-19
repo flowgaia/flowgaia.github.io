@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# 1. Rust: format check
+cargo fmt --manifest-path rust-core/Cargo.toml -- --check
+
+# 2. Rust: tests
+cargo test --manifest-path rust-core/Cargo.toml --quiet
+
+# 3. JS/CSS: lint-staged (prettier check on staged files)
+npx lint-staged

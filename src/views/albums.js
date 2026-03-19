@@ -14,7 +14,7 @@ export function initAlbums() {
     // Render on any event that might have changed the library
     if (
       event.type === 'PlaylistUpdated' ||
-      event.type === 'TrackChanged'    ||
+      event.type === 'TrackChanged' ||
       event.type === 'QueueUpdated'
     ) {
       renderAlbumGrid(window._musicLibrary?.albums || []);
@@ -77,7 +77,7 @@ export function renderAlbumGrid(albums) {
         <div class="album-artist">${escapeHtml(album.artist)}</div>
       </div>
     </div>
-  `
+  `,
     )
     .join('');
 

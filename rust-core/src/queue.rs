@@ -246,7 +246,7 @@ mod tests {
         let mut q = queue_with(&["a", "b", "c", "d"]);
         q.current_position = Some(2); // playing "c"
         q.reorder(0, 3); // move "a" (before cursor) past cursor
-        // "a" moved from 0 to 3, so cursor shifts back from 2 to 1
+                         // "a" moved from 0 to 3, so cursor shifts back from 2 to 1
         assert_eq!(q.current_position, Some(1));
         assert_eq!(q.track_ids[1], "c");
     }
@@ -256,7 +256,7 @@ mod tests {
         let mut q = queue_with(&["a", "b", "c", "d"]);
         q.current_position = Some(1); // playing "b"
         q.reorder(3, 0); // move "d" (after cursor) before cursor
-        // cursor shifts forward from 1 to 2
+                         // cursor shifts forward from 1 to 2
         assert_eq!(q.current_position, Some(2));
         assert_eq!(q.track_ids[2], "b");
     }

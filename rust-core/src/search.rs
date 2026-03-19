@@ -27,10 +27,7 @@ pub fn search_albums<'a>(albums: &'a [Album], query: &str) -> Vec<&'a Album> {
     }
     albums
         .iter()
-        .filter(|a| {
-            a.name.to_lowercase().contains(&q)
-                || a.artist.to_lowercase().contains(&q)
-        })
+        .filter(|a| a.name.to_lowercase().contains(&q) || a.artist.to_lowercase().contains(&q))
         .collect()
 }
 

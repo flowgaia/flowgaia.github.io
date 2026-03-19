@@ -6,7 +6,7 @@
  *   - 'downloaded' (keyPath=id) : cached audio blobs for offline playback
  */
 
-const DB_NAME    = 'music-player';
+const DB_NAME = 'music-player';
 const DB_VERSION = 1;
 
 let db = null;
@@ -47,7 +47,7 @@ async function getDb() {
  */
 export async function saveState(state) {
   try {
-    const d  = await getDb();
+    const d = await getDb();
     const tx = d.transaction('state', 'readwrite');
     tx.objectStore('state').put(state, 'playerState');
     await txComplete(tx);
@@ -63,8 +63,8 @@ export async function saveState(state) {
  */
 export async function loadState() {
   try {
-    const d    = await getDb();
-    const tx   = d.transaction('state', 'readonly');
+    const d = await getDb();
+    const tx = d.transaction('state', 'readonly');
     const store = tx.objectStore('state');
     return await storeGet(store, 'playerState');
   } catch {
@@ -82,7 +82,7 @@ export async function loadState() {
  */
 export async function saveDownloaded(id, blob) {
   try {
-    const d  = await getDb();
+    const d = await getDb();
     const tx = d.transaction('downloaded', 'readwrite');
     tx.objectStore('downloaded').put({ id, blob, savedAt: Date.now() });
     await txComplete(tx);
@@ -99,8 +99,8 @@ export async function saveDownloaded(id, blob) {
  */
 export async function getDownloaded(id) {
   try {
-    const d    = await getDb();
-    const tx   = d.transaction('downloaded', 'readonly');
+    const d = await getDb();
+    const tx = d.transaction('downloaded', 'readonly');
     return await storeGet(tx.objectStore('downloaded'), id);
   } catch {
     return null;
@@ -114,12 +114,12 @@ export async function getDownloaded(id) {
  */
 export async function getAllDownloadedIds() {
   try {
-    const d    = await getDb();
-    const tx   = d.transaction('downloaded', 'readonly');
+    const d = await getDb();
+    const tx = d.transaction('downloaded', 'readonly');
     return await new Promise((resolve) => {
       const req = tx.objectStore('downloaded').getAllKeys();
       req.onsuccess = (e) => resolve(e.target.result || []);
-      req.onerror   = ()  => resolve([]);
+      req.onerror = () => resolve([]);
     });
   } catch {
     return [];
@@ -133,7 +133,7 @@ export async function getAllDownloadedIds() {
  */
 export async function removeDownloaded(id) {
   try {
-    const d  = await getDb();
+    const d = await getDb();
     const tx = d.transaction('downloaded', 'readwrite');
     tx.objectStore('downloaded').delete(id);
     await txComplete(tx);
@@ -147,15 +147,15 @@ export async function removeDownloaded(id) {
 function txComplete(tx) {
   return new Promise((resolve, reject) => {
     tx.oncomplete = resolve;
-    tx.onerror    = () => reject(tx.error);
-    tx.onabort    = () => reject(tx.error);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }
 
 function storeGet(store, key) {
   return new Promise((resolve) => {
-    const req       = store.get(key);
-    req.onsuccess   = (e) => resolve(e.target.result ?? null);
-    req.onerror     = ()  => resolve(null);
+    const req = store.get(key);
+    req.onsuccess = (e) => resolve(e.target.result ?? null);
+    req.onerror = () => resolve(null);
   });
 }

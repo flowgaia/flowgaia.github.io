@@ -275,19 +275,14 @@
       "name": "Bluebird",
       "artist": "Flow Gaia",
       "artwork_url": "assets/images/albums/bluebird.png",
-      "track_ids": [
-        "bluebird",
-        "blade-of-thought"
-      ]
+      "track_ids": ["bluebird", "blade-of-thought"]
     },
     {
       "id": "i-love-myself-album",
       "name": "I Love Myself",
       "artist": "Flow Gaia",
       "artwork_url": "assets/images/albums/i-love-myself-album.png",
-      "track_ids": [
-        "i-love-myself-electro"
-      ]
+      "track_ids": ["i-love-myself-electro"]
     },
     {
       "id": "our-destiny",
@@ -321,9 +316,7 @@
       "name": "Love Songs",
       "artist": "Flow Gaia",
       "artwork_url": "assets/images/albums/love-what-is.png",
-      "track_ids": [
-        "feelings-first"
-      ]
+      "track_ids": ["feelings-first"]
     }
   ]
 }

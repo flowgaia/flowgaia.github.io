@@ -56,7 +56,7 @@ function renderDownloadedList(tracks) {
       </div>
       <span class="track-duration">${formatDuration(track.duration)}</span>
     </li>
-  `
+  `,
     )
     .join('');
 
@@ -74,8 +74,8 @@ function showStorageInfo() {
   if (!('storage' in navigator && 'estimate' in navigator.storage)) return;
 
   navigator.storage.estimate().then(({ usage = 0, quota = 0 }) => {
-    const usageMB = (usage  / 1024 / 1024).toFixed(1);
-    const quotaMB = (quota  / 1024 / 1024).toFixed(0);
+    const usageMB = (usage / 1024 / 1024).toFixed(1);
+    const quotaMB = (quota / 1024 / 1024).toFixed(0);
     const el = document.getElementById('storage-info');
     if (el) el.textContent = `Storage: ${usageMB} MB / ${quotaMB} MB used`;
   });

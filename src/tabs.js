@@ -6,7 +6,7 @@
  */
 
 export function initTabs() {
-  const tabs   = document.querySelectorAll('#tab-bar .tab');
+  const tabs = document.querySelectorAll('#tab-bar .tab');
   const panels = document.querySelectorAll('#app > .panel');
 
   tabs.forEach((tab) => {
@@ -15,7 +15,7 @@ export function initTabs() {
       if (!target) return;
 
       // Deactivate all
-      tabs.forEach((t)   => t.classList.remove('active'));
+      tabs.forEach((t) => t.classList.remove('active'));
       panels.forEach((p) => p.classList.remove('active'));
 
       // Activate selected

@@ -66,14 +66,14 @@ export function initAudio() {
 
     // Reset watchdog on every tick
     lastCurrentTime = audio.currentTime;
-    lastCheckTime   = Date.now();
+    lastCheckTime = Date.now();
   });
 
   // ── Buffering indicator ────────────────────────────────────
 
-  audio.addEventListener('waiting', ()  => document.body.classList.add('buffering'));
-  audio.addEventListener('playing', ()  => document.body.classList.remove('buffering'));
-  audio.addEventListener('canplay', ()  => document.body.classList.remove('buffering'));
+  audio.addEventListener('waiting', () => document.body.classList.add('buffering'));
+  audio.addEventListener('playing', () => document.body.classList.remove('buffering'));
+  audio.addEventListener('canplay', () => document.body.classList.remove('buffering'));
 
   // ── WASM event handlers ────────────────────────────────────
 
@@ -82,7 +82,7 @@ export function initAudio() {
 
     // Look up the source URI from the global music library cache
     const track = window._musicLibrary?.tracks?.find((t) => t.id === info.track_id);
-    const uri   = track?.uri;
+    const uri = track?.uri;
 
     if (uri) {
       audio.src = uri;
@@ -116,13 +116,13 @@ export function initAudio() {
 function startWatchdog() {
   clearInterval(watchdogTimer);
   lastCurrentTime = -1;
-  lastCheckTime   = Date.now();
+  lastCheckTime = Date.now();
 
   watchdogTimer = setInterval(() => {
     if (!audio || audio.paused || audio.ended || !audio.src) return;
 
     const now = Date.now();
-    if (audio.currentTime === lastCurrentTime && (now - lastCheckTime) > 8000) {
+    if (audio.currentTime === lastCurrentTime && now - lastCheckTime > 8000) {
       console.warn('[audio] watchdog: stalled > 8 s, advancing track');
       clearInterval(watchdogTimer);
       dispatchCommand({ type: 'Next' });

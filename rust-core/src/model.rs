@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// A single music track with all associated metadata.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

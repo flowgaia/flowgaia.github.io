@@ -48,8 +48,8 @@ thread_local! {
 #[wasm_bindgen]
 pub fn dispatch(command_json: &str) -> String {
     let result = (|| -> Result<String, String> {
-        let cmd: Command = serde_json::from_str(command_json)
-            .map_err(|e| format!("Parse error: {}", e))?;
+        let cmd: Command =
+            serde_json::from_str(command_json).map_err(|e| format!("Parse error: {}", e))?;
         let events = CONTROLLER.with(|c| c.borrow_mut().dispatch(cmd));
         serde_json::to_string(&events).map_err(|e| format!("Serialize error: {}", e))
     })();
@@ -70,9 +70,7 @@ pub fn dispatch(command_json: &str) -> String {
 /// after a hot-reload.
 #[wasm_bindgen]
 pub fn get_state() -> String {
-    CONTROLLER.with(|c| {
-        serde_json::to_string(&c.borrow().state).unwrap_or_else(|_| "{}".into())
-    })
+    CONTROLLER.with(|c| serde_json::to_string(&c.borrow().state).unwrap_or_else(|_| "{}".into()))
 }
 
 /// Smoke-test export.  Returns a greeting string so the embedding page can

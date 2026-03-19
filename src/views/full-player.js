@@ -13,8 +13,8 @@
 import { dispatchCommand, onEvent } from '../event-bus.js';
 import { seekTo } from '../audio.js';
 
-let isPlaying      = false;
-let repeatMode     = 'off';
+let isPlaying = false;
+let repeatMode = 'off';
 let shuffleEnabled = false;
 
 // Touch tracking
@@ -22,42 +22,32 @@ let touchStartX = 0;
 let touchStartY = 0;
 
 export function initFullPlayer() {
-  const fullPlayer   = document.getElementById('full-player');
-  const closeBtn     = document.getElementById('full-player-close');
+  const fullPlayer = document.getElementById('full-player');
+  const closeBtn = document.getElementById('full-player-close');
   const playPauseBtn = document.getElementById('full-play-pause');
-  const nextBtn      = document.getElementById('full-next');
-  const prevBtn      = document.getElementById('full-prev');
-  const shuffleBtn   = document.getElementById('full-shuffle');
-  const repeatBtn    = document.getElementById('full-repeat');
+  const nextBtn = document.getElementById('full-next');
+  const prevBtn = document.getElementById('full-prev');
+  const shuffleBtn = document.getElementById('full-shuffle');
+  const repeatBtn = document.getElementById('full-repeat');
   const progressContainer = document.getElementById('full-progress-container');
-  const artwork      = document.getElementById('full-artwork');
+  const artwork = document.getElementById('full-artwork');
 
   // ── Button handlers ─────────────────────────────────────────────────────
 
-  closeBtn?.addEventListener('click', () =>
-    fullPlayer?.classList.add('hidden')
-  );
+  closeBtn?.addEventListener('click', () => fullPlayer?.classList.add('hidden'));
 
   playPauseBtn?.addEventListener('click', () =>
-    dispatchCommand({ type: isPlaying ? 'Pause' : 'Play' })
+    dispatchCommand({ type: isPlaying ? 'Pause' : 'Play' }),
   );
 
-  nextBtn?.addEventListener('click', () =>
-    dispatchCommand({ type: 'Next' })
-  );
+  nextBtn?.addEventListener('click', () => dispatchCommand({ type: 'Next' }));
 
-  prevBtn?.addEventListener('click', () =>
-    dispatchCommand({ type: 'Previous' })
-  );
+  prevBtn?.addEventListener('click', () => dispatchCommand({ type: 'Previous' }));
 
-  shuffleBtn?.addEventListener('click', () =>
-    dispatchCommand({ type: 'ToggleShuffle' })
-  );
+  shuffleBtn?.addEventListener('click', () => dispatchCommand({ type: 'ToggleShuffle' }));
 
   repeatBtn?.addEventListener('click', () => {
-    const next =
-      repeatMode === 'off' ? 'all' :
-      repeatMode === 'all' ? 'one' : 'off';
+    const next = repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off';
     dispatchCommand({ type: 'SetRepeat', payload: next });
   });
 
@@ -65,58 +55,74 @@ export function initFullPlayer() {
 
   progressContainer?.addEventListener('click', (e) => {
     const rect = progressContainer.getBoundingClientRect();
-    const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     seekTo(pct);
   });
 
   // ── Swipe gestures on artwork ─────────────────────────────────────────────
 
-  artwork?.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
+  artwork?.addEventListener(
+    'touchstart',
+    (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    },
+    { passive: true },
+  );
 
-  artwork?.addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      dispatchCommand({ type: dx < 0 ? 'Next' : 'Previous' });
-    }
-  }, { passive: true });
+  artwork?.addEventListener(
+    'touchend',
+    (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        dispatchCommand({ type: dx < 0 ? 'Next' : 'Previous' });
+      }
+    },
+    { passive: true },
+  );
 
   // ── Swipe down to close ───────────────────────────────────────────────────
 
-  fullPlayer?.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
+  fullPlayer?.addEventListener(
+    'touchstart',
+    (e) => {
+      touchStartY = e.touches[0].clientY;
+    },
+    { passive: true },
+  );
 
-  fullPlayer?.addEventListener('touchend', (e) => {
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    if (dy > 100) fullPlayer.classList.add('hidden');
-  }, { passive: true });
+  fullPlayer?.addEventListener(
+    'touchend',
+    (e) => {
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (dy > 100) fullPlayer.classList.add('hidden');
+    },
+    { passive: true },
+  );
 
   // ── WASM event handlers ───────────────────────────────────────────────────
 
   onEvent('TrackChanged', (info) => {
     if (!info) return;
 
-    const titleEl  = document.getElementById('full-track-title');
+    const titleEl = document.getElementById('full-track-title');
     const artistEl = document.getElementById('full-track-artist');
-    const albumEl  = document.getElementById('full-album-name');
-    const artEl    = document.getElementById('full-artwork');
+    const albumEl = document.getElementById('full-album-name');
+    const artEl = document.getElementById('full-artwork');
     const placeholder = document.querySelector('.full-artwork-placeholder');
 
-    if (titleEl)  titleEl.textContent  = info.title  || 'Unknown';
+    if (titleEl) titleEl.textContent = info.title || 'Unknown';
     if (artistEl) artistEl.textContent = info.artist || '';
-    if (albumEl)  albumEl.textContent  = info.album  || '';
+    if (albumEl) albumEl.textContent = info.album || '';
 
     if (artEl) {
       if (info.artwork_url) {
-        artEl.src  = info.artwork_url;
-        artEl.style.display  = 'block';
+        artEl.src = info.artwork_url;
+        artEl.style.display = 'block';
         if (placeholder) placeholder.style.display = 'none';
       } else {
-        artEl.style.display  = 'none';
+        artEl.style.display = 'none';
         if (placeholder) placeholder.style.display = 'flex';
       }
     }
@@ -141,11 +147,11 @@ export function initFullPlayer() {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function updatePlayButton(playing) {
-  const playIcon  = document.getElementById('full-play-icon');
+  const playIcon = document.getElementById('full-play-icon');
   const pauseIcon = document.getElementById('full-pause-icon');
-  const btn       = document.getElementById('full-play-pause');
+  const btn = document.getElementById('full-play-pause');
 
-  if (playIcon)  playIcon.classList.toggle('hidden', playing);
+  if (playIcon) playIcon.classList.toggle('hidden', playing);
   if (pauseIcon) pauseIcon.classList.toggle('hidden', !playing);
   if (btn) btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
 }

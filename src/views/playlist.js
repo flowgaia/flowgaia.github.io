@@ -27,7 +27,7 @@ export function initPlaylist() {
  * @param {{ tracks: TrackSummary[], current_position: number, album_name?: string }} info
  */
 export function renderPlaylist(info) {
-  const list   = document.getElementById('playlist-list');
+  const list = document.getElementById('playlist-list');
   const header = document.getElementById('playlist-album-name');
   if (!list) return;
 
@@ -54,7 +54,7 @@ export function renderPlaylist(info) {
       <span class="track-duration">${formatDuration(track.duration)}</span>
       <button class="add-to-queue-btn" data-track-id="${escapeAttr(track.id)}" title="Add to queue" aria-label="Add to queue">+Q</button>
     </li>
-  `
+  `,
     )
     .join('');
 

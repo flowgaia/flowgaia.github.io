@@ -50,6 +50,33 @@ pub enum Command {
     SetDownloaded(Vec<String>),
     /// Load the downloaded tracks as the current playlist.
     LoadDownloaded,
+    /// Restore a previously-persisted playback session (playlist, queue,
+    /// shuffle, repeat, last track).  The library (tracks + albums) must
+    /// already be loaded before this command is issued.
+    RestoreState(PersistedState),
+}
+
+// ---------------------------------------------------------------------------
+// Persisted session state
+// ---------------------------------------------------------------------------
+
+/// A lightweight snapshot of the session saved to IndexedDB and sent back via
+/// `RestoreState` on the next app launch.  The library (tracks + albums) is
+/// **not** included — it is always reloaded from `music.json`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersistedState {
+    /// The track that was playing when the session was saved.
+    pub current_track_id: Option<String>,
+    /// The ordered list of track IDs in the current playlist.
+    pub playlist_track_ids: Vec<String>,
+    /// Cursor position in the playlist.
+    pub playlist_position: Option<usize>,
+    /// Un-shuffled order preserved so shuffle-off restores the original sequence.
+    pub original_playlist_order: Vec<String>,
+    /// Serialised `RepeatMode` variant name (`"Off"`, `"All"`, `"One"`).
+    pub repeat_mode: RepeatMode,
+    /// Whether shuffle is currently enabled.
+    pub shuffle_enabled: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +211,7 @@ impl Controller {
                 vec![]
             }
             Command::LoadDownloaded => self.handle_load_downloaded(),
+            Command::RestoreState(saved) => self.handle_restore_state(saved),
         }
     }
 
@@ -353,13 +381,7 @@ impl Controller {
     }
 
     fn handle_load_album(&mut self, album_id: String) -> Vec<Event> {
-        match self
-            .state
-            .albums
-            .iter()
-            .find(|a| a.id == album_id)
-            .cloned()
-        {
+        match self.state.albums.iter().find(|a| a.id == album_id).cloned() {
             Some(album) => {
                 let track_ids = album.track_ids.clone();
                 self.state.original_playlist_order = track_ids.clone();
@@ -434,8 +456,7 @@ impl Controller {
                 .current_position
                 .and_then(|p| self.state.current_playlist.track_ids.get(p).cloned());
 
-            self.state.current_playlist.track_ids =
-                self.state.original_playlist_order.clone();
+            self.state.current_playlist.track_ids = self.state.original_playlist_order.clone();
 
             // Re-locate the cursor in the restored order.
             if let Some(ref ct) = current_track {
@@ -501,6 +522,54 @@ impl Controller {
     fn handle_load_albums(&mut self, albums: Vec<Album>) -> Vec<Event> {
         self.state.albums = albums;
         vec![]
+    }
+
+    fn handle_restore_state(&mut self, saved: PersistedState) -> Vec<Event> {
+        // Restore playlist (only track IDs known to the library are kept).
+        let valid_ids: Vec<String> = saved
+            .playlist_track_ids
+            .into_iter()
+            .filter(|id| self.state.tracks.contains_key(id))
+            .collect();
+
+        let original_order: Vec<String> = if saved.original_playlist_order.is_empty() {
+            valid_ids.clone()
+        } else {
+            saved
+                .original_playlist_order
+                .into_iter()
+                .filter(|id| self.state.tracks.contains_key(id))
+                .collect()
+        };
+
+        // Clamp the cursor to the new length.
+        let position = saved.playlist_position.filter(|&p| p < valid_ids.len());
+
+        self.state.current_playlist = Playlist {
+            track_ids: valid_ids,
+            current_position: position,
+        };
+        self.state.original_playlist_order = original_order;
+        self.state.shuffle_enabled = saved.shuffle_enabled;
+        self.state.repeat_mode = saved.repeat_mode;
+        // Restore as Paused — never auto-play on startup (blocks mobile autoplay).
+        self.state.playback_state = PlaybackState::Paused;
+
+        let mut events: Vec<Event> = vec![
+            Event::ShuffleChanged(self.state.shuffle_enabled),
+            Event::RepeatChanged(self.repeat_str()),
+            Event::PlaylistUpdated(self.make_playlist_info()),
+        ];
+
+        // Emit TrackChanged so the mini-player shows the last track.
+        if let Some(track_id) = &saved.current_track_id {
+            if self.state.tracks.contains_key(track_id.as_str()) {
+                events.push(Event::TrackChanged(self.make_now_playing(track_id)));
+                events.push(Event::PlaybackStateChanged("paused".into()));
+            }
+        }
+
+        events
     }
 
     fn handle_load_downloaded(&mut self) -> Vec<Event> {

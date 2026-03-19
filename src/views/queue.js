@@ -17,7 +17,7 @@ export function initQueue() {
  * @param {{ tracks: TrackSummary[], current_position: number }} info
  */
 function renderQueue(info) {
-  const list  = document.getElementById('queue-list');
+  const list = document.getElementById('queue-list');
   const empty = document.getElementById('queue-empty');
   if (!list) return;
 
@@ -49,7 +49,7 @@ function renderQueue(info) {
               title="Remove from queue"
               aria-label="Remove from queue">✕</button>
     </li>
-  `
+  `,
     )
     .join('');
 
@@ -67,11 +67,7 @@ function renderQueue(info) {
   // Play track on row click (not on drag handle or remove button)
   list.querySelectorAll('.queue-item').forEach((item) => {
     item.addEventListener('click', (e) => {
-      if (
-        e.target.closest('.drag-handle') ||
-        e.target.closest('.remove-from-queue-btn')
-      )
-        return;
+      if (e.target.closest('.drag-handle') || e.target.closest('.remove-from-queue-btn')) return;
       dispatchCommand({ type: 'PlayTrack', payload: item.dataset.trackId });
     });
   });
@@ -85,12 +81,12 @@ function renderQueue(info) {
 function initSortable(list) {
   destroySortable();
   sortable = Sortable.create(list, {
-    handle:    '.drag-handle',
+    handle: '.drag-handle',
     animation: 150,
     onEnd: (evt) => {
       if (evt.oldIndex === evt.newIndex) return;
       dispatchCommand({
-        type:    'ReorderQueue',
+        type: 'ReorderQueue',
         payload: { from: evt.oldIndex, to: evt.newIndex },
       });
     },

@@ -10,16 +10,16 @@ import { dispatchCommand, onEvent } from '../event-bus.js';
 let isPlaying = false;
 
 export function initMiniPlayer() {
-  const miniPlayer  = document.getElementById('mini-player');
+  const miniPlayer = document.getElementById('mini-player');
   const playPauseBtn = document.getElementById('mini-play-pause');
-  const prevBtn     = document.getElementById('mini-prev');
-  const nextBtn     = document.getElementById('mini-next');
+  const prevBtn = document.getElementById('mini-prev');
+  const nextBtn = document.getElementById('mini-next');
 
   // Tap on mini player body → open full player
   miniPlayer?.addEventListener('click', (e) => {
     const isControl =
       e.target.closest('#mini-play-pause') ||
-      e.target.closest('#mini-prev')       ||
+      e.target.closest('#mini-prev') ||
       e.target.closest('#mini-next');
     if (!isControl) {
       document.getElementById('full-player')?.classList.remove('hidden');
@@ -47,21 +47,21 @@ export function initMiniPlayer() {
   onEvent('TrackChanged', (info) => {
     if (!info) return;
 
-    const titleEl  = document.getElementById('mini-track-title');
+    const titleEl = document.getElementById('mini-track-title');
     const artistEl = document.getElementById('mini-track-artist');
-    const artEl    = document.getElementById('mini-artwork');
+    const artEl = document.getElementById('mini-artwork');
     const placeholder = miniPlayer?.querySelector('.mini-artwork-placeholder');
 
-    if (titleEl)  titleEl.textContent  = info.title  || 'Unknown';
+    if (titleEl) titleEl.textContent = info.title || 'Unknown';
     if (artistEl) artistEl.textContent = info.artist || '';
 
     if (artEl) {
       if (info.artwork_url) {
         artEl.src = info.artwork_url;
-        artEl.style.display  = 'block';
+        artEl.style.display = 'block';
         if (placeholder) placeholder.style.display = 'none';
       } else {
-        artEl.style.display  = 'none';
+        artEl.style.display = 'none';
         if (placeholder) placeholder.style.display = 'flex';
       }
     }

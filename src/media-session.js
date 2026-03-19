@@ -15,10 +15,12 @@ export function initMediaSession() {
 
   // ── Hardware / OS media key handlers ─────────────────────────────────────
 
-  navigator.mediaSession.setActionHandler('play',          () => dispatchCommand({ type: 'Play' }));
-  navigator.mediaSession.setActionHandler('pause',         () => dispatchCommand({ type: 'Pause' }));
-  navigator.mediaSession.setActionHandler('previoustrack', () => dispatchCommand({ type: 'Previous' }));
-  navigator.mediaSession.setActionHandler('nexttrack',     () => dispatchCommand({ type: 'Next' }));
+  navigator.mediaSession.setActionHandler('play', () => dispatchCommand({ type: 'Play' }));
+  navigator.mediaSession.setActionHandler('pause', () => dispatchCommand({ type: 'Pause' }));
+  navigator.mediaSession.setActionHandler('previoustrack', () =>
+    dispatchCommand({ type: 'Previous' }),
+  );
+  navigator.mediaSession.setActionHandler('nexttrack', () => dispatchCommand({ type: 'Next' }));
 
   // seekto / seekbackward / seekforward (best-effort — not all platforms)
   try {
@@ -27,7 +29,9 @@ export function initMediaSession() {
         window._audio.currentTime = details.seekTime;
       }
     });
-  } catch { /* not supported on this platform */ }
+  } catch {
+    /* not supported on this platform */
+  }
 
   // ── WASM event handlers ───────────────────────────────────────────────────
 
@@ -38,9 +42,9 @@ export function initMediaSession() {
       : [];
 
     navigator.mediaSession.metadata = new MediaMetadata({
-      title:   info.title  || 'Unknown Title',
-      artist:  info.artist || 'Unknown Artist',
-      album:   info.album  || '',
+      title: info.title || 'Unknown Title',
+      artist: info.artist || 'Unknown Artist',
+      album: info.album || '',
       artwork,
     });
 
@@ -51,8 +55,7 @@ export function initMediaSession() {
   });
 
   onEvent('PlaybackStateChanged', (state) => {
-    navigator.mediaSession.playbackState =
-      state === 'playing' ? 'playing' : 'paused';
+    navigator.mediaSession.playbackState = state === 'playing' ? 'playing' : 'paused';
   });
 
   // Keep position state fresh on time updates
@@ -77,9 +80,11 @@ function updatePositionState() {
   if (!audio || !audio.duration || !isFinite(audio.duration)) return;
   try {
     navigator.mediaSession.setPositionState({
-      duration:     audio.duration,
+      duration: audio.duration,
       playbackRate: audio.playbackRate,
-      position:     audio.currentTime,
+      position: audio.currentTime,
     });
-  } catch { /* setPositionState may not be available */ }
+  } catch {
+    /* setPositionState may not be available */
+  }
 }

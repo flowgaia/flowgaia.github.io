@@ -63,9 +63,9 @@ fn track_changed_id(events: &[Event]) -> String {
 
 /// Return `true` if the events contain a `PlaybackStateChanged` with `state`.
 fn has_state(events: &[Event], state: &str) -> bool {
-    events.iter().any(|e| {
-        matches!(e, Event::PlaybackStateChanged(s) if s == state)
-    })
+    events
+        .iter()
+        .any(|e| matches!(e, Event::PlaybackStateChanged(s) if s == state))
 }
 
 fn has_stopped(events: &[Event]) -> bool {
@@ -189,9 +189,7 @@ fn previous_at_start_does_nothing_repeat_off() {
     // At the start – Previous should not crash and should NOT change the track.
     let events = ctrl.dispatch(Command::Previous);
     // No TrackChanged expected; just a state event.
-    assert!(!events
-        .iter()
-        .any(|e| matches!(e, Event::TrackChanged(_))));
+    assert!(!events.iter().any(|e| matches!(e, Event::TrackChanged(_))));
 }
 
 // ---------------------------------------------------------------------------
@@ -271,10 +269,7 @@ fn queue_source_playlist_position_is_saved_correctly() {
     // Enter queue
     ctrl.dispatch(Command::Next); // q1 – saves playlist pos 1
 
-    assert_eq!(
-        ctrl.state.current_queue.source_playlist_position,
-        Some(1)
-    );
+    assert_eq!(ctrl.state.current_queue.source_playlist_position, Some(1));
 
     // Exit queue → should continue from t3 (pos 2)
     let e = ctrl.dispatch(Command::Next);
@@ -352,9 +347,7 @@ fn play_track_clears_queue() {
 fn play_track_not_in_playlist_returns_error() {
     let mut ctrl = controller_with_tracks(3);
     let events = ctrl.dispatch(Command::PlayTrack("nonexistent".into()));
-    assert!(events
-        .iter()
-        .any(|e| matches!(e, Event::Error(_))));
+    assert!(events.iter().any(|e| matches!(e, Event::Error(_))));
 }
 
 // ---------------------------------------------------------------------------
@@ -365,10 +358,7 @@ fn play_track_not_in_playlist_returns_error() {
 fn load_album_sets_playlist() {
     let mut ctrl = Controller::new();
 
-    let tracks: Vec<Track> = vec![
-        make_track("a", "Alpha", 1),
-        make_track("b", "Beta", 2),
-    ];
+    let tracks: Vec<Track> = vec![make_track("a", "Alpha", 1), make_track("b", "Beta", 2)];
     let album = make_album("alb", vec!["a", "b"]);
     ctrl.dispatch(Command::LoadTracks(tracks));
     ctrl.dispatch(Command::LoadAlbums(vec![album]));
@@ -387,9 +377,7 @@ fn load_album_sets_playlist() {
 fn load_nonexistent_album_returns_error() {
     let mut ctrl = Controller::new();
     let events = ctrl.dispatch(Command::LoadAlbum("no-such-album".into()));
-    assert!(events
-        .iter()
-        .any(|e| matches!(e, Event::Error(_))));
+    assert!(events.iter().any(|e| matches!(e, Event::Error(_))));
 }
 
 // ---------------------------------------------------------------------------
@@ -432,10 +420,7 @@ fn shuffle_keeps_current_track_at_front() {
 
     ctrl.dispatch(Command::ToggleShuffle);
 
-    assert_eq!(
-        ctrl.state.current_playlist.track_ids[0],
-        "t3"
-    );
+    assert_eq!(ctrl.state.current_playlist.track_ids[0], "t3");
     assert_eq!(ctrl.state.current_playlist.current_position, Some(0));
 }
 
@@ -496,9 +481,16 @@ fn search_empty_query_returns_all_tracks() {
     ctrl.dispatch(Command::LoadTracks(tracks));
 
     let events = ctrl.dispatch(Command::Search("".into()));
-    let results = events.iter().find_map(|e| {
-        if let Event::SearchResults(r) = e { Some(r.clone()) } else { None }
-    }).unwrap();
+    let results = events
+        .iter()
+        .find_map(|e| {
+            if let Event::SearchResults(r) = e {
+                Some(r.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap();
     assert_eq!(results.tracks.len(), 5);
 }
 
@@ -552,9 +544,16 @@ fn load_downloaded_creates_sorted_playlist() {
     ]));
 
     let events = ctrl.dispatch(Command::LoadDownloaded);
-    let payload = events.iter().find_map(|e| {
-        if let Event::DownloadedLoaded(p) = e { Some(p.clone()) } else { None }
-    }).expect("Expected DownloadedLoaded");
+    let payload = events
+        .iter()
+        .find_map(|e| {
+            if let Event::DownloadedLoaded(p) = e {
+                Some(p.clone())
+            } else {
+                None
+            }
+        })
+        .expect("Expected DownloadedLoaded");
 
     // Sorted: a1, b1, b2
     assert_eq!(payload.tracks[0].id, "a1");
@@ -569,9 +568,16 @@ fn is_downloaded_flag_set_correctly() {
     ctrl.dispatch(Command::SetDownloaded(vec!["t1".into(), "t3".into()]));
 
     let events = ctrl.dispatch(Command::Search("Track".into()));
-    let results = events.iter().find_map(|e| {
-        if let Event::SearchResults(r) = e { Some(r.clone()) } else { None }
-    }).unwrap();
+    let results = events
+        .iter()
+        .find_map(|e| {
+            if let Event::SearchResults(r) = e {
+                Some(r.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap();
 
     for summary in &results.tracks {
         match summary.id.as_str() {
@@ -625,4 +631,93 @@ fn controller_default_state_is_stopped() {
     assert_eq!(ctrl.state.repeat_mode, RepeatMode::Off);
     assert!(ctrl.state.tracks.is_empty());
     assert!(ctrl.state.albums.is_empty());
+}
+
+// ---------------------------------------------------------------------------
+// RestoreState
+// ---------------------------------------------------------------------------
+
+#[test]
+fn restore_state_restores_playlist_and_cursor() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(3);
+    // Library is loaded. Now simulate a restore from a previous session.
+    let saved = PersistedState {
+        current_track_id: Some("t2".into()),
+        playlist_track_ids: vec!["t1".into(), "t2".into(), "t3".into()],
+        playlist_position: Some(1),
+        original_playlist_order: vec!["t1".into(), "t2".into(), "t3".into()],
+        repeat_mode: music_core::model::RepeatMode::All,
+        shuffle_enabled: false,
+    };
+    let events = ctrl.dispatch(Command::RestoreState(saved));
+
+    assert_eq!(ctrl.state.current_playlist.current_position, Some(1));
+    assert_eq!(ctrl.state.repeat_mode, music_core::model::RepeatMode::All);
+    assert!(!ctrl.state.shuffle_enabled);
+    // Must emit TrackChanged with the restored track.
+    assert_eq!(track_changed_id(&events), "t2");
+    // Restored state is always paused (no auto-play on startup).
+    assert!(events
+        .iter()
+        .any(|e| matches!(e, Event::PlaybackStateChanged(s) if s == "paused")));
+}
+
+#[test]
+fn restore_state_filters_unknown_track_ids() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(2);
+    let saved = PersistedState {
+        current_track_id: None,
+        // "ghost" doesn't exist in the library.
+        playlist_track_ids: vec!["t1".into(), "ghost".into(), "t2".into()],
+        playlist_position: Some(0),
+        original_playlist_order: vec!["t1".into(), "ghost".into(), "t2".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+    };
+    ctrl.dispatch(Command::RestoreState(saved));
+
+    // Only the two known tracks should survive.
+    assert_eq!(ctrl.state.current_playlist.track_ids, vec!["t1", "t2"]);
+}
+
+#[test]
+fn restore_state_clamps_out_of_bounds_cursor() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(2);
+    let saved = PersistedState {
+        current_track_id: None,
+        playlist_track_ids: vec!["t1".into(), "t2".into()],
+        // position 99 is out of range → should be clamped to None.
+        playlist_position: Some(99),
+        original_playlist_order: vec!["t1".into(), "t2".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+    };
+    ctrl.dispatch(Command::RestoreState(saved));
+
+    assert_eq!(ctrl.state.current_playlist.current_position, None);
+}
+
+#[test]
+fn restore_state_no_track_changed_when_current_track_unknown() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(2);
+    let saved = PersistedState {
+        current_track_id: Some("ghost".into()), // not in library
+        playlist_track_ids: vec!["t1".into(), "t2".into()],
+        playlist_position: Some(0),
+        original_playlist_order: vec!["t1".into(), "t2".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+    };
+    let events = ctrl.dispatch(Command::RestoreState(saved));
+
+    // No TrackChanged since the track isn't in the catalogue.
+    assert!(!events.iter().any(|e| matches!(e, Event::TrackChanged(_))));
 }

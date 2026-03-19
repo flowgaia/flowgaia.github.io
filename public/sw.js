@@ -3,40 +3,32 @@
 
 const CACHE_NAME = 'music-player-v1';
 
-// Shell files to pre-cache on install
-const SHELL_FILES = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/manifest.json',
-  '/src/app.js',
-  '/src/event-bus.js',
-  '/src/tabs.js',
-  '/src/audio.js',
-  '/src/media-session.js',
-  '/src/storage.js',
-  '/src/views/albums.js',
-  '/src/views/playlist.js',
-  '/src/views/queue.js',
-  '/src/views/downloaded.js',
-  '/src/views/mini-player.js',
-  '/src/views/full-player.js',
-];
+// Shell files to pre-cache on install.
+//
+// Vite hashes and bundles JS/CSS — their filenames are unknown at SW
+// authoring time.  We therefore only pre-cache the document root and the
+// static data files whose names are stable.  The cache-first fetch handler
+// below will populate all other assets (hashed JS, CSS, WASM) on first visit
+// and serve them offline from then on.
+const SHELL_FILES = ['/', '/manifest.json', '/music.json'];
 
 // ── Install: cache shell ────────────────────────────────────────────────────
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // Cache individually so one failure doesn't break everything
-      return Promise.allSettled(
-        SHELL_FILES.map((url) =>
-          cache.add(url).catch((err) => {
-            console.warn('[SW] Failed to cache:', url, err);
-          })
-        )
-      );
-    }).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => {
+        // Cache individually so one failure doesn't break everything
+        return Promise.allSettled(
+          SHELL_FILES.map((url) =>
+            cache.add(url).catch((err) => {
+              console.warn('[SW] Failed to cache:', url, err);
+            }),
+          ),
+        );
+      })
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -44,13 +36,12 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
       )
-    ).then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -86,8 +77,10 @@ self.addEventListener('fetch', (event) => {
 function isAudioRequest(request) {
   const url = new URL(request.url);
   const ext = url.pathname.split('.').pop().toLowerCase();
-  return ['mp3', 'flac', 'ogg', 'opus', 'm4a', 'aac', 'wav'].includes(ext)
-    || request.headers.get('Range') !== null;
+  return (
+    ['mp3', 'flac', 'ogg', 'opus', 'm4a', 'aac', 'wav'].includes(ext) ||
+    request.headers.get('Range') !== null
+  );
 }
 
 /**
@@ -136,7 +129,7 @@ async function buildRangeResponse(cachedResponse, rangeHeader) {
   }
 
   const start = match[1] !== '' ? parseInt(match[1], 10) : total - parseInt(match[2], 10);
-  const end   = match[2] !== '' ? Math.min(parseInt(match[2], 10), total - 1) : total - 1;
+  const end = match[2] !== '' ? Math.min(parseInt(match[2], 10), total - 1) : total - 1;
 
   if (start > end || start >= total) {
     return new Response('Range Not Satisfiable', {
@@ -149,10 +142,10 @@ async function buildRangeResponse(cachedResponse, rangeHeader) {
   return new Response(slice, {
     status: 206,
     headers: {
-      'Content-Type':  cachedResponse.headers.get('Content-Type') || 'audio/mpeg',
+      'Content-Type': cachedResponse.headers.get('Content-Type') || 'audio/mpeg',
       'Content-Range': `bytes ${start}-${end}/${total}`,
       'Content-Length': String(slice.byteLength),
-      'Accept-Ranges':  'bytes',
+      'Accept-Ranges': 'bytes',
     },
   });
 }

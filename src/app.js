@@ -9,15 +9,17 @@ import { initMiniPlayer } from './views/mini-player.js';
 import { initFullPlayer } from './views/full-player.js';
 import { initAudio } from './audio.js';
 import { initMediaSession } from './media-session.js';
-import { loadState, getAllDownloadedIds } from './storage.js';
-import { dispatchCommand, setWasmDispatch } from './event-bus.js';
+import { loadState, saveState, getAllDownloadedIds } from './storage.js';
+import { dispatchCommand, onEvent, setWasmDispatch } from './event-bus.js';
 
+// ---------------------------------------------------------------------------
 // Theme toggle
+// ---------------------------------------------------------------------------
+
 function initTheme() {
   const toggle = document.getElementById('theme-toggle');
   const html = document.documentElement;
 
-  // Initialize from localStorage or system preference
   const saved = localStorage.getItem('theme');
   if (saved === 'light') {
     html.classList.remove('dark');
@@ -34,6 +36,67 @@ function initTheme() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// State persistence — track in-memory snapshot, debounce saves to IndexedDB
+// ---------------------------------------------------------------------------
+
+let _sessionState = {
+  current_track_id: null,
+  playlist_track_ids: [],
+  playlist_position: null,
+  original_playlist_order: [],
+  repeat_mode: 'Off',
+  shuffle_enabled: false,
+};
+
+let _saveTimer = null;
+
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    saveState({ ..._sessionState }).catch(console.error);
+  }, 1000);
+}
+
+function initStatePersistence() {
+  onEvent('TrackChanged', (info) => {
+    _sessionState.current_track_id = info.track_id;
+    scheduleSave();
+  });
+
+  onEvent('PlaylistUpdated', (info) => {
+    _sessionState.playlist_track_ids = (info.tracks || []).map((t) => t.id);
+    _sessionState.playlist_position = info.current_position ?? null;
+    scheduleSave();
+  });
+
+  onEvent('ShuffleChanged', (enabled) => {
+    _sessionState.shuffle_enabled = enabled;
+    scheduleSave();
+  });
+
+  onEvent('RepeatChanged', (mode) => {
+    // Convert lowercase event values ('off','all','one') to Rust enum names.
+    const map = { off: 'Off', all: 'All', one: 'One' };
+    _sessionState.repeat_mode = map[mode] ?? 'Off';
+    scheduleSave();
+  });
+}
+
+async function restoreSessionState() {
+  const saved = await loadState();
+  if (!saved || !saved.playlist_track_ids?.length) return;
+
+  // Sync the in-memory snapshot so subsequent saves don't clobber the restore.
+  _sessionState = { ..._sessionState, ...saved };
+
+  dispatchCommand({ type: 'RestoreState', payload: saved });
+}
+
+// ---------------------------------------------------------------------------
+// Bootstrap
+// ---------------------------------------------------------------------------
+
 async function main() {
   initTheme();
 
@@ -41,6 +104,9 @@ async function main() {
   await init();
   console.log(greet('FlowGaia'));
   setWasmDispatch(wasmDispatch);
+
+  // Wire up persistence listeners before any events are emitted.
+  initStatePersistence();
 
   // Initialize all UI components
   initTabs();
@@ -53,20 +119,25 @@ async function main() {
   initAudio();
   initMediaSession();
 
-  // Load saved downloaded state from IndexedDB
+  // Load downloaded IDs so the WASM core knows which tracks are offline.
   const downloadedIds = await getAllDownloadedIds();
   if (downloadedIds.length > 0) {
     dispatchCommand({ type: 'SetDownloaded', payload: downloadedIds });
   }
 
-  // Load music library
+  // Load music library, then restore last session.
   await loadLibrary();
+  await restoreSessionState();
 
   // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Music library loader
+// ---------------------------------------------------------------------------
 
 async function loadLibrary() {
   try {
@@ -80,7 +151,6 @@ async function loadLibrary() {
     dispatchCommand({ type: 'LoadTracks', payload: data.tracks });
     dispatchCommand({ type: 'LoadAlbums', payload: data.albums });
 
-    // Render album grid
     renderAlbumGrid(data.albums);
   } catch (err) {
     console.warn('Failed to load music.json, using demo data:', err);
@@ -90,12 +160,45 @@ async function loadLibrary() {
 
 function loadDemoData() {
   const tracks = [
-    { id: 't1', title: 'Song One', artist: 'Demo Artist', album: 'Demo Album', duration: 210, track_number: 1, uri: '', artwork_url: '' },
-    { id: 't2', title: 'Song Two', artist: 'Demo Artist', album: 'Demo Album', duration: 185, track_number: 2, uri: '', artwork_url: '' },
-    { id: 't3', title: 'Song Three', artist: 'Demo Artist', album: 'Demo Album', duration: 230, track_number: 3, uri: '', artwork_url: '' },
+    {
+      id: 't1',
+      title: 'Song One',
+      artist: 'Demo Artist',
+      album: 'Demo Album',
+      duration: 210,
+      track_number: 1,
+      uri: '',
+      artwork_url: '',
+    },
+    {
+      id: 't2',
+      title: 'Song Two',
+      artist: 'Demo Artist',
+      album: 'Demo Album',
+      duration: 185,
+      track_number: 2,
+      uri: '',
+      artwork_url: '',
+    },
+    {
+      id: 't3',
+      title: 'Song Three',
+      artist: 'Demo Artist',
+      album: 'Demo Album',
+      duration: 230,
+      track_number: 3,
+      uri: '',
+      artwork_url: '',
+    },
   ];
   const albums = [
-    { id: 'a1', name: 'Demo Album', artist: 'Demo Artist', artwork_url: '', track_ids: ['t1', 't2', 't3'] },
+    {
+      id: 'a1',
+      name: 'Demo Album',
+      artist: 'Demo Artist',
+      artwork_url: '',
+      track_ids: ['t1', 't2', 't3'],
+    },
   ];
   window._musicLibrary = { tracks, albums };
   dispatchCommand({ type: 'LoadTracks', payload: tracks });
