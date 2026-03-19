@@ -24,8 +24,11 @@ export function initTabs() {
   const panels = document.querySelectorAll('.panel');
 
   // Restore the last active tab, falling back to 'albums'.
+  // Validate against known tabs so a stale or corrupt localStorage value
+  // cannot produce a blank screen.
+  const validTabs = new Set([...tabs].map((t) => t.dataset.tab).filter(Boolean));
   const saved = localStorage.getItem(STORAGE_KEY) ?? 'albums';
-  activateTab(tabs, panels, saved);
+  activateTab(tabs, panels, validTabs.has(saved) ? saved : 'albums');
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
