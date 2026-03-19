@@ -1,0 +1,329 @@
+{
+  "tracks": [
+    {
+      "id": "ashes-into-light",
+      "title": "Ashes into Light (Lullaby)",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 1,
+      "uri": "assets/audio/ashes-into-light.mp3",
+      "artwork_url": "assets/images/songs/ashes-into-light.png"
+    },
+    {
+      "id": "heaven-now",
+      "title": "Heaven Now",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 2,
+      "uri": "assets/audio/heaven-now.mp3",
+      "artwork_url": "assets/images/songs/heaven-now.png"
+    },
+    {
+      "id": "here-and-now",
+      "title": "Here and Now",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 3,
+      "uri": "assets/audio/here-and-now.mp3",
+      "artwork_url": "assets/images/songs/here-and-now.png"
+    },
+    {
+      "id": "i-love-myself",
+      "title": "I Love Myself",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 4,
+      "uri": "assets/audio/i-love-myself.mp3",
+      "artwork_url": "assets/images/songs/i-love-myself.png"
+    },
+    {
+      "id": "no-script",
+      "title": "No Script",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 5,
+      "uri": "assets/audio/no-script.mp3",
+      "artwork_url": "assets/images/songs/no-script.png"
+    },
+    {
+      "id": "the-dream-is-yours",
+      "title": "The Dream is Yours",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 6,
+      "uri": "assets/audio/the-dream-is-yours.mp3",
+      "artwork_url": "assets/images/songs/the-dream-is-yours.svg"
+    },
+    {
+      "id": "resist-nothing-allow-everything",
+      "title": "Resist Nothing, Allow Everything",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 7,
+      "uri": "assets/audio/resist-nothing-allow-everything.mp3",
+      "artwork_url": "assets/images/albums/love-what-is.png"
+    },
+    {
+      "id": "spotlight-divine",
+      "title": "Spotlight Divine",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 8,
+      "uri": "assets/audio/spotlight-divine.mp3",
+      "artwork_url": "assets/images/albums/love-what-is.png"
+    },
+    {
+      "id": "who-am-i",
+      "title": "Who Am I?",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 9,
+      "uri": "assets/audio/who-am-i.mp3",
+      "artwork_url": "assets/images/albums/love-what-is.png"
+    },
+    {
+      "id": "you-are-the-source-of-love",
+      "title": "You Are the Source of Love",
+      "artist": "Flow Gaia",
+      "album": "Love What Is",
+      "duration": 0,
+      "track_number": 10,
+      "uri": "assets/audio/you-are-the-source-of-love.mp3",
+      "artwork_url": "assets/images/albums/love-what-is.png"
+    },
+    {
+      "id": "bluebird",
+      "title": "Bluebird",
+      "artist": "Flow Gaia",
+      "album": "Bluebird",
+      "duration": 0,
+      "track_number": 1,
+      "uri": "assets/audio/bluebird.mp3",
+      "artwork_url": "assets/images/songs/bluebird.jpeg"
+    },
+    {
+      "id": "blade-of-thought",
+      "title": "Blade of Thought",
+      "artist": "Flow Gaia",
+      "album": "Bluebird",
+      "duration": 0,
+      "track_number": 2,
+      "uri": "assets/audio/blade-of-thought.mp3",
+      "artwork_url": "assets/images/songs/blade-of-thought.jpeg"
+    },
+    {
+      "id": "i-love-myself-electro",
+      "title": "I Love Myself (Electro)",
+      "artist": "Flow Gaia",
+      "album": "I Love Myself",
+      "duration": 0,
+      "track_number": 1,
+      "uri": "assets/audio/i-love-myself-electro.mp3",
+      "artwork_url": "assets/images/songs/i-love-myself-electro.jpeg"
+    },
+    {
+      "id": "you-belong",
+      "title": "You Belong",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 1,
+      "uri": "assets/audio/you-belong.mp3",
+      "artwork_url": "assets/images/songs/you-belong.png"
+    },
+    {
+      "id": "our-destiny",
+      "title": "Our Destiny",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 2,
+      "uri": "assets/audio/our-destiny.mp3",
+      "artwork_url": "assets/images/albums/our-destiny.png"
+    },
+    {
+      "id": "together-we-build-v1",
+      "title": "Together (Psychedelic Pump)",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 3,
+      "uri": "assets/audio/together-we-build-v1.mp3",
+      "artwork_url": "assets/images/albums/our-destiny.png"
+    },
+    {
+      "id": "together-we-build-v4",
+      "title": "Together (Sweet Drops)",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 4,
+      "uri": "assets/audio/together-we-build-v4.mp3",
+      "artwork_url": "assets/images/albums/our-destiny.png"
+    },
+    {
+      "id": "together-we-build-v5",
+      "title": "Together (Deep Groove)",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 5,
+      "uri": "assets/audio/together-we-build-v5.mp3",
+      "artwork_url": "assets/images/albums/our-destiny.png"
+    },
+    {
+      "id": "together-we-build-v7",
+      "title": "Together (Funky Slap)",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 6,
+      "uri": "assets/audio/together-we-build-v7.mp3",
+      "artwork_url": "assets/images/albums/our-destiny.png"
+    },
+    {
+      "id": "birthday-together",
+      "title": "Birthday Together",
+      "artist": "Flow Gaia",
+      "album": "Our Destiny",
+      "duration": 0,
+      "track_number": 7,
+      "uri": "assets/audio/birthday-together.mp3",
+      "artwork_url": "assets/images/albums/our-destiny.png"
+    },
+    {
+      "id": "hollow-men-bass-bump",
+      "title": "Hollow Men (Bass Bump)",
+      "artist": "Flow Gaia",
+      "album": "Hollow Men",
+      "duration": 0,
+      "track_number": 1,
+      "uri": "assets/audio/hollow-men-bass-bump.mp3",
+      "artwork_url": "assets/images/songs/hollow-men-bass-bump.jpg"
+    },
+    {
+      "id": "hollow-men-disco-latte",
+      "title": "Hollow Men (Disco Latte)",
+      "artist": "Flow Gaia",
+      "album": "Hollow Men",
+      "duration": 0,
+      "track_number": 2,
+      "uri": "assets/audio/hollow-men-disco-latte.mp3",
+      "artwork_url": "assets/images/songs/hollow-men-disco-latte.jpg"
+    },
+    {
+      "id": "hollow-men-disco-slap",
+      "title": "Hollow Men (Disco Slap)",
+      "artist": "Flow Gaia",
+      "album": "Hollow Men",
+      "duration": 0,
+      "track_number": 3,
+      "uri": "assets/audio/hollow-men-disco-slap.mp3",
+      "artwork_url": "assets/images/songs/hollow-men-disco-slap.jpg"
+    },
+    {
+      "id": "hollow-men-funky-slap-unhinged",
+      "title": "Hollow Men (Funky Slap Unhinged)",
+      "artist": "Flow Gaia",
+      "album": "Hollow Men",
+      "duration": 0,
+      "track_number": 4,
+      "uri": "assets/audio/hollow-men-funky-slap-unhinged.mp3",
+      "artwork_url": "assets/images/songs/hollow-men-disco-slap-unhinged.jpg"
+    },
+    {
+      "id": "feelings-first",
+      "title": "Feelings First",
+      "artist": "Flow Gaia",
+      "album": "Love Songs",
+      "duration": 0,
+      "track_number": 1,
+      "uri": "assets/audio/feelings-first.mp3",
+      "artwork_url": "assets/images/albums/love-what-is.png"
+    }
+  ],
+  "albums": [
+    {
+      "id": "love-what-is",
+      "name": "Love What Is",
+      "artist": "Flow Gaia",
+      "artwork_url": "assets/images/albums/love-what-is.png",
+      "track_ids": [
+        "ashes-into-light",
+        "heaven-now",
+        "here-and-now",
+        "i-love-myself",
+        "no-script",
+        "the-dream-is-yours",
+        "resist-nothing-allow-everything",
+        "spotlight-divine",
+        "who-am-i",
+        "you-are-the-source-of-love"
+      ]
+    },
+    {
+      "id": "bluebird",
+      "name": "Bluebird",
+      "artist": "Flow Gaia",
+      "artwork_url": "assets/images/albums/bluebird.png",
+      "track_ids": [
+        "bluebird",
+        "blade-of-thought"
+      ]
+    },
+    {
+      "id": "i-love-myself-album",
+      "name": "I Love Myself",
+      "artist": "Flow Gaia",
+      "artwork_url": "assets/images/albums/i-love-myself-album.png",
+      "track_ids": [
+        "i-love-myself-electro"
+      ]
+    },
+    {
+      "id": "our-destiny",
+      "name": "Our Destiny",
+      "artist": "Flow Gaia",
+      "artwork_url": "assets/images/albums/our-destiny.png",
+      "track_ids": [
+        "you-belong",
+        "our-destiny",
+        "together-we-build-v1",
+        "together-we-build-v4",
+        "together-we-build-v5",
+        "together-we-build-v7",
+        "birthday-together"
+      ]
+    },
+    {
+      "id": "hollow-men",
+      "name": "Hollow Men",
+      "artist": "Flow Gaia",
+      "artwork_url": "assets/images/albums/hollow-men.png",
+      "track_ids": [
+        "hollow-men-bass-bump",
+        "hollow-men-disco-latte",
+        "hollow-men-disco-slap",
+        "hollow-men-funky-slap-unhinged"
+      ]
+    },
+    {
+      "id": "love-songs",
+      "name": "Love Songs",
+      "artist": "Flow Gaia",
+      "artwork_url": "assets/images/albums/love-what-is.png",
+      "track_ids": [
+        "feelings-first"
+      ]
+    }
+  ]
+}

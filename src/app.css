@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Tab active styles */
+.tab {
+  @apply text-neutral-400 dark:text-neutral-500;
+}
+.tab.active {
+  @apply text-neutral-900 dark:text-neutral-100;
+}
+
+/* Panel switching */
+.panel {
+  display: block;
+}
+.panel.hidden {
+  display: none;
+}
+
+/* Track playing highlight */
+.track-item.playing {
+  @apply bg-neutral-50 dark:bg-neutral-900;
+}
+.track-item.playing .track-title {
+  @apply font-semibold text-neutral-900 dark:text-neutral-100;
+}
+
+/* Sortable drag states */
+.sortable-ghost {
+  @apply opacity-40;
+}
+.sortable-chosen {
+  @apply bg-neutral-50 dark:bg-neutral-800;
+}
+
+/* Slide up animation for full player */
+#full-player:not(.hidden) {
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Progress bar */
+.progress-bar {
+  transition: width 0.1s linear;
+}
+
+/* Album card hover */
+.album-card:hover .album-overlay {
+  opacity: 1;
+}
