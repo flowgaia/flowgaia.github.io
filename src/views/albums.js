@@ -6,40 +6,12 @@
  * playlist and switches to the Playlist tab.
  */
 
-import { dispatchCommand, onEvent } from '../event-bus.js';
+import { dispatchCommand } from '../event-bus.js';
 
-export function initAlbums() {
-  // Re-render whenever the library is updated (LoadAlbums fires LoadTracks too)
-  onEvent('*', (event) => {
-    // Render on any event that might have changed the library
-    if (
-      event.type === 'PlaylistUpdated' ||
-      event.type === 'TrackChanged' ||
-      event.type === 'QueueUpdated'
-    ) {
-      renderAlbumGrid(window._musicLibrary?.albums || []);
-    }
-  });
-
-  // dispatchCommand LoadAlbums events ultimately come back as PlaylistUpdated or
-  // similar from the core; we also do an initial render after the library loads.
-  // For robustness, do an initial render attempt now (may be empty) and again
-  // on the LoadAlbums command path by watching the global.
-  const tryInitialRender = () => {
-    const albums = window._musicLibrary?.albums || [];
-    if (albums.length > 0) renderAlbumGrid(albums);
-  };
-
-  // Poll briefly on startup to catch the library being set before events fire
-  let attempts = 0;
-  const pollId = setInterval(() => {
-    attempts++;
-    tryInitialRender();
-    if ((window._musicLibrary?.albums?.length ?? 0) > 0 || attempts > 20) {
-      clearInterval(pollId);
-    }
-  }, 100);
-}
+// initAlbums is a no-op: the initial render is driven by app.js calling
+// renderAlbumGrid(data.albums) directly after loadLibrary() resolves.
+// The album catalogue never changes after load, so no event listener is needed.
+export function initAlbums() {}
 
 // ── Exported so app.js / other modules can trigger a re-render directly ──────
 

@@ -4,11 +4,7 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [
-    wasm(),
-    topLevelAwait(),
-    tailwindcss(),
-  ],
+  plugins: [wasm(), topLevelAwait(), tailwindcss()],
   publicDir: 'public',
   build: {
     outDir: 'dist',
@@ -17,6 +13,11 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3000,
+    },
   },
   assetsInclude: ['**/*.wasm'],
 });
