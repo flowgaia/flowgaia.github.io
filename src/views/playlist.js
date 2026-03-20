@@ -148,7 +148,8 @@ export function renderPlaylist(info) {
     btn.disabled = false;
     // Mutate cached info to mark all album tracks as downloaded, then re-render.
     if (_lastInfo) {
-      const downloadedIds = new Set(tracksWithUri.map((t) => t.id));
+      // Only mark tracks that actually have a URI — downloadAlbum skips URI-less tracks.
+      const downloadedIds = new Set(tracksWithUri.filter((t) => t.uri).map((t) => t.id));
       _lastInfo.tracks.forEach((t) => {
         if (downloadedIds.has(t.id)) t.is_downloaded = true;
       });
