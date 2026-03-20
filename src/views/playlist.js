@@ -146,8 +146,14 @@ export function renderPlaylist(info) {
 
     label.textContent = 'Download Album';
     btn.disabled = false;
-    // Re-render with updated download status.
-    if (_lastInfo) renderPlaylist(_lastInfo);
+    // Mutate cached info to mark all album tracks as downloaded, then re-render.
+    if (_lastInfo) {
+      const downloadedIds = new Set(tracksWithUri.map((t) => t.id));
+      _lastInfo.tracks.forEach((t) => {
+        if (downloadedIds.has(t.id)) t.is_downloaded = true;
+      });
+      renderPlaylist(_lastInfo);
+    }
   });
 
   // ── Track list ──────────────────────────────────────────────────────────────
@@ -269,8 +275,13 @@ export function renderPlaylist(info) {
         uri,
         null,
         () => {
-          // Re-render with updated is_downloaded flags after success.
-          if (_lastInfo) renderPlaylist(_lastInfo);
+          // Mutate cached info so the re-render shows the checkmark.
+          // (SetDownloaded emits no WASM events, so _lastInfo won't be refreshed otherwise.)
+          if (_lastInfo) {
+            const t = _lastInfo.tracks.find((tr) => tr.id === trackId);
+            if (t) t.is_downloaded = true;
+            renderPlaylist(_lastInfo);
+          }
         },
         (id, err) => {
           console.error('[playlist] download failed for', id, err);
