@@ -650,6 +650,7 @@ fn restore_state_restores_playlist_and_cursor() {
         original_playlist_order: vec!["t1".into(), "t2".into(), "t3".into()],
         repeat_mode: music_core::model::RepeatMode::All,
         shuffle_enabled: false,
+        current_album_id: None,
     };
     let events = ctrl.dispatch(Command::RestoreState(saved));
 
@@ -677,6 +678,7 @@ fn restore_state_filters_unknown_track_ids() {
         original_playlist_order: vec!["t1".into(), "ghost".into(), "t2".into()],
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
+        current_album_id: None,
     };
     ctrl.dispatch(Command::RestoreState(saved));
 
@@ -697,10 +699,164 @@ fn restore_state_clamps_out_of_bounds_cursor() {
         original_playlist_order: vec!["t1".into(), "t2".into()],
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
+        current_album_id: None,
     };
     ctrl.dispatch(Command::RestoreState(saved));
 
     assert_eq!(ctrl.state.current_playlist.current_position, None);
+}
+
+// ---------------------------------------------------------------------------
+// Cross-album navigation
+// ---------------------------------------------------------------------------
+
+/// Build a controller with two albums:
+///   album1: t1, t2
+///   album2: t3, t4
+/// The first album is loaded as the active playlist.
+fn controller_with_two_albums() -> Controller {
+    let mut ctrl = Controller::new();
+
+    let tracks = vec![
+        make_track("t1", "Track 1", 1),
+        make_track("t2", "Track 2", 2),
+        make_track("t3", "Track 3", 1),
+        make_track("t4", "Track 4", 2),
+    ];
+    let album1 = make_album("album1", vec!["t1", "t2"]);
+    let album2 = make_album("album2", vec!["t3", "t4"]);
+
+    ctrl.dispatch(Command::LoadTracks(tracks));
+    ctrl.dispatch(Command::LoadAlbums(vec![album1, album2]));
+    ctrl.dispatch(Command::LoadAlbum("album1".into()));
+    ctrl
+}
+
+#[test]
+fn next_at_end_of_album_advances_to_next_album() {
+    let mut ctrl = controller_with_two_albums();
+
+    ctrl.dispatch(Command::Next); // t1
+    ctrl.dispatch(Command::Next); // t2
+
+    // End of album1 — should advance to album2's first track.
+    let events = ctrl.dispatch(Command::Next);
+    assert!(has_playing(&events));
+    assert_eq!(track_changed_id(&events), "t3");
+    assert_eq!(ctrl.state.current_playlist.current_position, Some(0));
+    assert_eq!(ctrl.state.current_album_id.as_deref(), Some("album2"));
+    assert_eq!(ctrl.state.current_album_index, Some(1));
+}
+
+#[test]
+fn next_at_end_of_last_album_stops_repeat_off() {
+    let mut ctrl = controller_with_two_albums();
+    ctrl.dispatch(Command::LoadAlbum("album2".into()));
+
+    ctrl.dispatch(Command::Next); // t3
+    ctrl.dispatch(Command::Next); // t4
+
+    // End of last album, repeat off — should stop.
+    let events = ctrl.dispatch(Command::Next);
+    assert!(has_stopped(&events));
+    assert_eq!(ctrl.state.playback_state, PlaybackState::Stopped);
+}
+
+#[test]
+fn next_at_end_of_last_album_wraps_to_first_repeat_all() {
+    let mut ctrl = controller_with_two_albums();
+    ctrl.dispatch(Command::SetRepeat("all".into()));
+    ctrl.dispatch(Command::LoadAlbum("album2".into()));
+
+    ctrl.dispatch(Command::Next); // t3
+    ctrl.dispatch(Command::Next); // t4
+
+    // End of last album, repeat all — should wrap to album1's first track.
+    let events = ctrl.dispatch(Command::Next);
+    assert!(has_playing(&events));
+    assert_eq!(track_changed_id(&events), "t1");
+    assert_eq!(ctrl.state.current_album_id.as_deref(), Some("album1"));
+    assert_eq!(ctrl.state.current_album_index, Some(0));
+}
+
+#[test]
+fn next_wraps_at_end_single_album_repeat_all() {
+    // With a single album and repeat-all, wrapping should loop back to
+    // the same album's first track (via try_advance_to_next_album).
+    let mut ctrl = controller_with_tracks(2);
+    ctrl.dispatch(Command::SetRepeat("all".into()));
+
+    ctrl.dispatch(Command::Next); // t1
+    ctrl.dispatch(Command::Next); // t2
+
+    // Should wrap to t1.
+    let events = ctrl.dispatch(Command::Next);
+    assert!(has_playing(&events));
+    assert_eq!(track_changed_id(&events), "t1");
+    assert_eq!(ctrl.state.current_playlist.current_position, Some(0));
+}
+
+#[test]
+fn previous_at_start_of_album_retreats_to_prev_album_last_track() {
+    let mut ctrl = controller_with_two_albums();
+    ctrl.dispatch(Command::LoadAlbum("album2".into()));
+
+    ctrl.dispatch(Command::Next); // t3
+
+    // At start of album2 — Previous should land on album1's last track (t2).
+    let events = ctrl.dispatch(Command::Previous);
+    assert!(has_playing(&events));
+    assert_eq!(track_changed_id(&events), "t2");
+    assert_eq!(ctrl.state.current_album_id.as_deref(), Some("album1"));
+    assert_eq!(ctrl.state.current_album_index, Some(0));
+}
+
+#[test]
+fn previous_at_start_of_first_album_wraps_to_last_album_repeat_all() {
+    let mut ctrl = controller_with_two_albums();
+    ctrl.dispatch(Command::SetRepeat("all".into()));
+
+    ctrl.dispatch(Command::Next); // t1
+
+    // At start of album1 with repeat-all — Previous should land on album2's last track.
+    let events = ctrl.dispatch(Command::Previous);
+    assert!(has_playing(&events));
+    assert_eq!(track_changed_id(&events), "t4");
+    assert_eq!(ctrl.state.current_album_id.as_deref(), Some("album2"));
+    assert_eq!(ctrl.state.current_album_index, Some(1));
+}
+
+#[test]
+fn previous_at_start_of_first_album_stays_repeat_off() {
+    let mut ctrl = controller_with_two_albums();
+
+    ctrl.dispatch(Command::Next); // t1
+
+    // At start of album1, repeat off — Previous should not emit TrackChanged.
+    let events = ctrl.dispatch(Command::Previous);
+    assert!(!events.iter().any(|e| matches!(e, Event::TrackChanged(_))));
+}
+
+#[test]
+fn restore_state_restores_current_album_id() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_two_albums();
+
+    let saved = PersistedState {
+        current_track_id: Some("t3".into()),
+        playlist_track_ids: vec!["t3".into(), "t4".into()],
+        playlist_position: Some(0),
+        original_playlist_order: vec!["t3".into(), "t4".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+        current_album_id: Some("album2".into()),
+    };
+    ctrl.dispatch(Command::RestoreState(saved));
+
+    // Album index should be resolved from the saved album ID.
+    assert_eq!(ctrl.state.current_album_id.as_deref(), Some("album2"));
+    assert_eq!(ctrl.state.current_album_index, Some(1));
 }
 
 #[test]
@@ -715,6 +871,7 @@ fn restore_state_no_track_changed_when_current_track_unknown() {
         original_playlist_order: vec!["t1".into(), "t2".into()],
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
+        current_album_id: None,
     };
     let events = ctrl.dispatch(Command::RestoreState(saved));
 

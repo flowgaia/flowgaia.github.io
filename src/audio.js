@@ -85,6 +85,18 @@ export function initAudio() {
     const uri = track?.uri;
 
     if (uri) {
+      // If a restored seek position is pending (session restore), apply it once
+      // the audio is ready to seek (canplay event), then clear the flag.
+      const restoredTime = window._restoredCurrentTime;
+      if (restoredTime > 0) {
+        delete window._restoredCurrentTime;
+        const applySeek = () => {
+          audio.currentTime = restoredTime;
+          audio.removeEventListener('canplay', applySeek);
+        };
+        audio.addEventListener('canplay', applySeek);
+      }
+
       audio.src = uri;
       audio.play().catch((err) => console.warn('[audio] play() rejected:', err));
     } else {

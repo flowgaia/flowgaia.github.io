@@ -77,6 +77,11 @@ pub struct PersistedState {
     pub repeat_mode: RepeatMode,
     /// Whether shuffle is currently enabled.
     pub shuffle_enabled: bool,
+    /// The album that was loaded when the session was saved.  Used to restore
+    /// `current_album_index` for cross-album navigation on the next launch.
+    /// Absent in older saved states — treated as `None`.
+    #[serde(default)]
+    pub current_album_id: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -137,6 +142,9 @@ pub struct PlaylistInfo {
     pub current_position: Option<usize>,
     /// Display name for the playlist (usually an album name).
     pub album_name: Option<String>,
+    /// The album ID for the current playlist, if loaded from an album.
+    /// Used by the JS layer to persist and restore which album is loaded.
+    pub album_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -282,9 +290,14 @@ impl Controller {
                 ]
             }
             None => {
-                // End of playlist with repeat off.
-                self.state.playback_state = PlaybackState::Stopped;
-                vec![Event::PlaybackStateChanged("stopped".into())]
+                // End of playlist — attempt to advance to the next album.
+                if let Some(album_events) = self.try_advance_to_next_album() {
+                    album_events
+                } else {
+                    // Truly at the end of the library (repeat off).
+                    self.state.playback_state = PlaybackState::Stopped;
+                    vec![Event::PlaybackStateChanged("stopped".into())]
+                }
             }
         }
     }
@@ -352,7 +365,14 @@ impl Controller {
                     Event::PlaylistUpdated(playlist_info),
                 ]
             }
-            None => vec![Event::PlaybackStateChanged(self.state_str())],
+            None => {
+                // Start of playlist — attempt to retreat to the previous album.
+                if let Some(album_events) = self.try_retreat_to_prev_album() {
+                    album_events
+                } else {
+                    vec![Event::PlaybackStateChanged(self.state_str())]
+                }
+            }
         }
     }
 
@@ -390,6 +410,10 @@ impl Controller {
                     current_position: None,
                 };
                 self.state.current_queue = Queue::new();
+                // Track which album is loaded for cross-album navigation.
+                self.state.current_album_index =
+                    self.state.albums.iter().position(|a| a.id == album_id);
+                self.state.current_album_id = Some(album_id.clone());
                 if self.state.shuffle_enabled {
                     fisher_yates_shuffle(&mut self.state.current_playlist.track_ids);
                 }
@@ -555,6 +579,13 @@ impl Controller {
         // Restore as Paused — never auto-play on startup (blocks mobile autoplay).
         self.state.playback_state = PlaybackState::Paused;
 
+        // Restore cross-album navigation state.
+        if let Some(ref album_id) = saved.current_album_id {
+            self.state.current_album_id = Some(album_id.clone());
+            self.state.current_album_index =
+                self.state.albums.iter().position(|a| &a.id == album_id);
+        }
+
         let mut events: Vec<Event> = vec![
             Event::ShuffleChanged(self.state.shuffle_enabled),
             Event::RepeatChanged(self.repeat_str()),
@@ -602,6 +633,7 @@ impl Controller {
             tracks: summaries,
             current_position: None,
             album_name: Some("Downloaded".into()),
+            album_id: None,
         };
 
         vec![Event::DownloadedLoaded(playlist_info)]
@@ -643,9 +675,11 @@ impl Controller {
         }
     }
 
-    /// Advance the playlist cursor and return the track ID, honouring
-    /// `RepeatMode::All` wrap-around.  Returns `None` at end-of-playlist when
-    /// repeat is off.
+    /// Advance the playlist cursor by one position and return the track ID.
+    ///
+    /// Returns `None` when the end of the playlist is reached.  The caller
+    /// (`handle_next`) is responsible for deciding whether to advance to the
+    /// next album or stop.
     fn try_advance_playlist(&mut self) -> Option<String> {
         let len = self.state.current_playlist.track_ids.len();
         if len == 0 {
@@ -661,19 +695,15 @@ impl Controller {
             self.state.current_playlist.current_position = Some(next_pos);
             Some(self.state.current_playlist.track_ids[next_pos].clone())
         } else {
-            match self.state.repeat_mode {
-                RepeatMode::All => {
-                    self.state.current_playlist.current_position = Some(0);
-                    self.state.current_playlist.track_ids.first().cloned()
-                }
-                _ => None,
-            }
+            None
         }
     }
 
-    /// Retreat the playlist cursor by one position, honouring
-    /// `RepeatMode::All` wrap-around to the last track.  Returns `None` when
-    /// already at the beginning and repeat is off.
+    /// Retreat the playlist cursor by one position and return the track ID.
+    ///
+    /// Returns `None` when already at the beginning.  The caller
+    /// (`handle_previous`) is responsible for deciding whether to retreat to
+    /// the previous album or stay.
     fn try_retreat_playlist(&mut self) -> Option<String> {
         let len = self.state.current_playlist.track_ids.len();
         if len == 0 {
@@ -681,21 +711,85 @@ impl Controller {
         }
 
         match self.state.current_playlist.current_position {
-            None | Some(0) => {
-                if self.state.repeat_mode == RepeatMode::All {
-                    let last = len - 1;
-                    self.state.current_playlist.current_position = Some(last);
-                    self.state.current_playlist.track_ids.last().cloned()
-                } else {
-                    None
-                }
-            }
+            None | Some(0) => None,
             Some(p) => {
                 let prev = p - 1;
                 self.state.current_playlist.current_position = Some(prev);
                 Some(self.state.current_playlist.track_ids[prev].clone())
             }
         }
+    }
+
+    /// Attempt to advance to the first track of the next album in the library.
+    ///
+    /// - If a next album exists, it is loaded and its first track starts playing.
+    /// - If we are on the last album and `RepeatMode::All` is set, wrap around
+    ///   to the first album.
+    /// - Otherwise (last album + repeat off) return `None` so the caller can stop.
+    fn try_advance_to_next_album(&mut self) -> Option<Vec<Event>> {
+        let current_idx = self.state.current_album_index?;
+        let num_albums = self.state.albums.len();
+
+        let next_idx = if current_idx + 1 < num_albums {
+            current_idx + 1
+        } else if self.state.repeat_mode == RepeatMode::All && num_albums > 0 {
+            0
+        } else {
+            return None;
+        };
+
+        let album_id = self.state.albums[next_idx].id.clone();
+        // Load the album — sets up playlist, queue, and current_album_index.
+        let mut events = self.handle_load_album(album_id);
+
+        // Start playing the first track immediately.
+        if let Some(track_id) = self.state.current_playlist.track_ids.first().cloned() {
+            self.state.current_playlist.current_position = Some(0);
+            self.state.playback_state = PlaybackState::Playing;
+            let info = self.make_now_playing(&track_id);
+            let playlist_info = self.make_playlist_info();
+            events.push(Event::TrackChanged(info));
+            events.push(Event::PlaybackStateChanged("playing".into()));
+            events.push(Event::PlaylistUpdated(playlist_info));
+        }
+
+        Some(events)
+    }
+
+    /// Attempt to retreat to the last track of the previous album in the library.
+    ///
+    /// - If a previous album exists, it is loaded and its last track starts playing.
+    /// - If we are on the first album and `RepeatMode::All` is set, wrap around
+    ///   to the last album.
+    /// - Otherwise (first album + repeat off) return `None` so the caller can stay.
+    fn try_retreat_to_prev_album(&mut self) -> Option<Vec<Event>> {
+        let current_idx = self.state.current_album_index?;
+        let num_albums = self.state.albums.len();
+
+        let prev_idx = if current_idx > 0 {
+            current_idx - 1
+        } else if self.state.repeat_mode == RepeatMode::All && num_albums > 0 {
+            num_albums - 1
+        } else {
+            return None;
+        };
+
+        let album_id = self.state.albums[prev_idx].id.clone();
+        // Load the album — sets up playlist, queue, and current_album_index.
+        let mut events = self.handle_load_album(album_id);
+
+        // Start playing the last track (going backwards).
+        let last_pos = self.state.current_playlist.track_ids.len().checked_sub(1)?;
+        let track_id = self.state.current_playlist.track_ids[last_pos].clone();
+        self.state.current_playlist.current_position = Some(last_pos);
+        self.state.playback_state = PlaybackState::Playing;
+        let info = self.make_now_playing(&track_id);
+        let playlist_info = self.make_playlist_info();
+        events.push(Event::TrackChanged(info));
+        events.push(Event::PlaybackStateChanged("playing".into()));
+        events.push(Event::PlaylistUpdated(playlist_info));
+
+        Some(events)
     }
 
     // -----------------------------------------------------------------------
@@ -778,6 +872,7 @@ impl Controller {
                 .collect(),
             current_position: self.state.current_playlist.current_position,
             album_name,
+            album_id: self.state.current_album_id.clone(),
         }
     }
 

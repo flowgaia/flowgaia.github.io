@@ -87,6 +87,12 @@ pub struct PlayerState {
     /// The un-shuffled ordering of the current playlist, preserved so that
     /// turning shuffle off restores the original sequence.
     pub original_playlist_order: Vec<String>,
+    /// The ID of the album currently loaded as the active playlist.  Used to
+    /// resolve `current_album_index` and to persist across sessions.
+    pub current_album_id: Option<String>,
+    /// Index of `current_album_id` within `albums`, cached for O(1) cross-album
+    /// navigation.  Derived from `current_album_id` on restore.
+    pub current_album_index: Option<usize>,
 }
 
 impl Default for PlayerState {
@@ -107,6 +113,8 @@ impl Default for PlayerState {
             playback_state: PlaybackState::Stopped,
             shuffle_enabled: false,
             original_playlist_order: Vec::new(),
+            current_album_id: None,
+            current_album_index: None,
         }
     }
 }
