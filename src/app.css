@@ -20,6 +20,14 @@
   display: none;
 }
 
+/* Queue playing highlight */
+.queue-item.playing {
+  @apply bg-neutral-50 dark:bg-neutral-800;
+}
+.queue-item.playing .track-title {
+  @apply font-semibold text-neutral-900 dark:text-neutral-100;
+}
+
 /* Sortable drag states */
 .sortable-ghost {
   @apply opacity-40;
