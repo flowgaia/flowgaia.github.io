@@ -400,24 +400,39 @@ impl Controller {
         }
     }
 
+    /// Mutate state to load `album_id` as the active playlist.
+    ///
+    /// Returns the album name on success, or `None` if the album was not found.
+    /// **Does not emit any events** — callers are responsible for constructing
+    /// and emitting the appropriate `PlaylistUpdated` (and optional
+    /// `TrackChanged`) events so that cross-album helpers never emit a
+    /// duplicate `PlaylistUpdated`.
+    fn load_album_state(&mut self, album_id: &str) -> Option<String> {
+        let album = self
+            .state
+            .albums
+            .iter()
+            .find(|a| a.id == album_id)
+            .cloned()?;
+        let track_ids = album.track_ids.clone();
+        self.state.original_playlist_order = track_ids.clone();
+        self.state.current_playlist = Playlist {
+            track_ids,
+            current_position: None,
+        };
+        self.state.current_queue = Queue::new();
+        self.state.current_album_index = self.state.albums.iter().position(|a| a.id == album_id);
+        self.state.current_album_id = Some(album_id.to_string());
+        if self.state.shuffle_enabled {
+            fisher_yates_shuffle(&mut self.state.current_playlist.track_ids);
+        }
+        Some(album.name)
+    }
+
     fn handle_load_album(&mut self, album_id: String) -> Vec<Event> {
-        match self.state.albums.iter().find(|a| a.id == album_id).cloned() {
-            Some(album) => {
-                let track_ids = album.track_ids.clone();
-                self.state.original_playlist_order = track_ids.clone();
-                self.state.current_playlist = Playlist {
-                    track_ids: track_ids.clone(),
-                    current_position: None,
-                };
-                self.state.current_queue = Queue::new();
-                // Track which album is loaded for cross-album navigation.
-                self.state.current_album_index =
-                    self.state.albums.iter().position(|a| a.id == album_id);
-                self.state.current_album_id = Some(album_id.clone());
-                if self.state.shuffle_enabled {
-                    fisher_yates_shuffle(&mut self.state.current_playlist.track_ids);
-                }
-                let playlist_info = self.make_playlist_info_with_album(&album.name);
+        match self.load_album_state(&album_id) {
+            Some(album_name) => {
+                let playlist_info = self.make_playlist_info_with_album(&album_name);
                 vec![Event::PlaylistUpdated(playlist_info)]
             }
             None => vec![Event::Error(format!("Album {} not found", album_id))],
@@ -739,21 +754,21 @@ impl Controller {
         };
 
         let album_id = self.state.albums[next_idx].id.clone();
-        // Load the album — sets up playlist, queue, and current_album_index.
-        let mut events = self.handle_load_album(album_id);
+        // Mutate state (no events emitted).
+        let album_name = self.load_album_state(&album_id)?;
 
         // Start playing the first track immediately.
-        if let Some(track_id) = self.state.current_playlist.track_ids.first().cloned() {
-            self.state.current_playlist.current_position = Some(0);
-            self.state.playback_state = PlaybackState::Playing;
-            let info = self.make_now_playing(&track_id);
-            let playlist_info = self.make_playlist_info();
-            events.push(Event::TrackChanged(info));
-            events.push(Event::PlaybackStateChanged("playing".into()));
-            events.push(Event::PlaylistUpdated(playlist_info));
-        }
-
-        Some(events)
+        let track_id = self.state.current_playlist.track_ids.first()?.clone();
+        self.state.current_playlist.current_position = Some(0);
+        self.state.playback_state = PlaybackState::Playing;
+        let info = self.make_now_playing(&track_id);
+        // Emit a single PlaylistUpdated with current_position already set.
+        let playlist_info = self.make_playlist_info_with_album(&album_name);
+        Some(vec![
+            Event::PlaylistUpdated(playlist_info),
+            Event::TrackChanged(info),
+            Event::PlaybackStateChanged("playing".into()),
+        ])
     }
 
     /// Attempt to retreat to the last track of the previous album in the library.
@@ -775,8 +790,8 @@ impl Controller {
         };
 
         let album_id = self.state.albums[prev_idx].id.clone();
-        // Load the album — sets up playlist, queue, and current_album_index.
-        let mut events = self.handle_load_album(album_id);
+        // Mutate state (no events emitted).
+        let album_name = self.load_album_state(&album_id)?;
 
         // Start playing the last track (going backwards).
         let last_pos = self.state.current_playlist.track_ids.len().checked_sub(1)?;
@@ -784,12 +799,13 @@ impl Controller {
         self.state.current_playlist.current_position = Some(last_pos);
         self.state.playback_state = PlaybackState::Playing;
         let info = self.make_now_playing(&track_id);
-        let playlist_info = self.make_playlist_info();
-        events.push(Event::TrackChanged(info));
-        events.push(Event::PlaybackStateChanged("playing".into()));
-        events.push(Event::PlaylistUpdated(playlist_info));
-
-        Some(events)
+        // Emit a single PlaylistUpdated with current_position already set.
+        let playlist_info = self.make_playlist_info_with_album(&album_name);
+        Some(vec![
+            Event::PlaylistUpdated(playlist_info),
+            Event::TrackChanged(info),
+            Event::PlaybackStateChanged("playing".into()),
+        ])
     }
 
     // -----------------------------------------------------------------------

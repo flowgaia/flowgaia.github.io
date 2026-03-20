@@ -72,10 +72,16 @@ function initStatePersistence() {
   });
 
   onEvent('PlaylistUpdated', (info) => {
-    _sessionState.playlist_track_ids = (info.tracks || []).map((t) => t.id);
+    const ids = (info.tracks || []).map((t) => t.id);
+    _sessionState.playlist_track_ids = ids;
     _sessionState.playlist_position = info.current_position ?? null;
     if (info.album_id != null) {
       _sessionState.current_album_id = info.album_id;
+    }
+    // When shuffle is off the current order IS the original order.
+    // This ensures shuffle-off restores correctly after a reload.
+    if (!_sessionState.shuffle_enabled) {
+      _sessionState.original_playlist_order = ids;
     }
     scheduleSave();
   });

@@ -10,11 +10,14 @@
  */
 
 import { dispatchCommand, onEvent } from './event-bus.js';
+import { getDownloaded } from './storage.js';
 
 let audio = null;
 let watchdogTimer = null;
 let lastCurrentTime = -1;
 let lastCheckTime = 0;
+/** Blob URL created for the current track (if downloaded); revoked on track change. */
+let _activeBlobUrl = null;
 
 // ── Initialise ────────────────────────────────────────────────────────────────
 
@@ -77,12 +80,25 @@ export function initAudio() {
 
   // ── WASM event handlers ────────────────────────────────────
 
-  onEvent('TrackChanged', (info) => {
+  onEvent('TrackChanged', async (info) => {
     if (!info?.track_id) return;
 
-    // Look up the source URI from the global music library cache
-    const track = window._musicLibrary?.tracks?.find((t) => t.id === info.track_id);
-    const uri = track?.uri;
+    // Revoke any blob URL from the previous track to free memory.
+    if (_activeBlobUrl) {
+      URL.revokeObjectURL(_activeBlobUrl);
+      _activeBlobUrl = null;
+    }
+
+    // Prefer a locally-downloaded blob; fall back to the remote URI.
+    const downloaded = await getDownloaded(info.track_id);
+    let uri;
+    if (downloaded?.blob) {
+      _activeBlobUrl = URL.createObjectURL(downloaded.blob);
+      uri = _activeBlobUrl;
+    } else {
+      const track = window._musicLibrary?.tracks?.find((t) => t.id === info.track_id);
+      uri = track?.uri;
+    }
 
     if (uri) {
       // If a restored seek position is pending (session restore), apply it once
