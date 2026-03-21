@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# 1. Rust: format check (workspace-level)
+cargo fmt -- --check
+
+# 2. Rust: tests (workspace-level)
+cargo test --quiet
+
+# 3. JS/CSS: lint-staged (prettier on staged files)
+npx lint-staged

@@ -45,3 +45,13 @@ yarn-error.log*
 *.tmp
 tmp/
 temp/
+
+# Build outputs
+node_modules/
+dist/
+wasm/
+target/
+coverage/
+
+# Lock files (keep package-lock.json but not cargo lock in CI)
+Cargo.lock
