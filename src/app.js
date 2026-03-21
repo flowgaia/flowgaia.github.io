@@ -213,8 +213,10 @@ async function main() {
     if (document.visibilityState === 'hidden') saveNow();
   });
 
-  // Register service worker
-  if ('serviceWorker' in navigator) {
+  // Register service worker in production only.
+  // In development (Vite HMR), the cache-first SW strategy causes stale assets
+  // to be served after code changes, breaking hot reload and tab restore.
+  if ('serviceWorker' in navigator && import.meta.env.PROD) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
   }
 }

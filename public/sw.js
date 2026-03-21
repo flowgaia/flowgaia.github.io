@@ -1,7 +1,7 @@
 // Service Worker for Music Player PWA
 // Manual implementation (no Workbox CDN dependency)
 
-const CACHE_NAME = 'music-player-v1';
+const CACHE_NAME = 'music-player-v2';
 
 // Shell files to pre-cache on install.
 //

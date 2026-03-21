@@ -114,7 +114,10 @@ export function initAudio() {
       }
 
       audio.src = uri;
-      audio.play().catch((err) => console.warn('[audio] play() rejected:', err));
+      // Do NOT call play() here. PlaybackStateChanged("playing") fires immediately
+      // after TrackChanged for user-initiated actions and will call play() then.
+      // Calling play() here would violate the browser's autoplay policy on session
+      // restore (where PlaybackStateChanged("paused") follows instead).
     } else {
       // No URI (demo data) — just reset position
       audio.pause();
