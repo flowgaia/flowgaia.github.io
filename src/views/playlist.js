@@ -28,10 +28,12 @@ export function initPlaylist() {
     _lastInfo = info;
     renderPlaylist(info);
   });
-  onEvent('DownloadedLoaded', (info) => {
-    _lastInfo = info;
-    renderPlaylist(info);
-  });
+  // NOTE: do NOT listen to DownloadedLoaded here.
+  // DownloadedLoaded fires on startup and on every Downloaded-tab click, carrying
+  // the downloaded-track list as `info`.  Rendering that info into #playlist-list
+  // would overwrite the current album view with downloaded tracks.  Download-state
+  // changes are handled locally: the download-button handler mutates _lastInfo and
+  // calls renderPlaylist(_lastInfo) directly.
 
   // Highlight the current track when playback changes.
   onEvent('TrackChanged', (info) => {

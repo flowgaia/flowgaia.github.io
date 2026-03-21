@@ -236,11 +236,11 @@ impl Controller {
 
     fn handle_play(&mut self) -> Vec<Event> {
         self.state.playback_state = PlaybackState::Playing;
-        let mut events = vec![Event::PlaybackStateChanged("playing".into())];
-        if let Some(info) = self.now_playing_info() {
-            events.push(Event::TrackChanged(info));
-        }
-        events
+        // Only emit PlaybackStateChanged — the track has not changed.
+        // Emitting TrackChanged here would cause audio.js to reassign audio.src,
+        // which resets audio.currentTime to 0 and discards any seek position the
+        // user applied while paused.
+        vec![Event::PlaybackStateChanged("playing".into())]
     }
 
     fn handle_pause(&mut self) -> Vec<Event> {

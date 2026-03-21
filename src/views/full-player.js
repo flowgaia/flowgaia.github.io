@@ -160,10 +160,12 @@ function updateRepeatButton(mode) {
   const btn = document.getElementById('full-repeat');
   if (!btn) return;
 
-  // Replace inner SVG / text based on repeat mode
+  // Replace inner SVG / text based on repeat mode.
+  // class="w-6 h-6" must be present on every SVG — without it the browser
+  // renders the SVG at the default 300 × 150 px, breaking the controls row.
   if (mode === 'one') {
     btn.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
       </svg>
       <span style="position:absolute;font-size:9px;font-weight:700;bottom:4px;right:6px">1</span>
@@ -172,7 +174,7 @@ function updateRepeatButton(mode) {
   } else {
     btn.style.position = '';
     btn.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
       </svg>
     `;

@@ -97,6 +97,23 @@ fn pause_sets_paused_state() {
     assert_eq!(ctrl.state.playback_state, PlaybackState::Paused);
 }
 
+#[test]
+fn play_does_not_emit_track_changed() {
+    // Play (resume) must NOT emit TrackChanged — the track has not changed.
+    // Re-emitting TrackChanged causes audio.js to reassign audio.src, which
+    // resets audio.currentTime to 0 and discards any paused-seek position.
+    let mut ctrl = controller_with_tracks(3);
+    ctrl.dispatch(Command::Next); // land on t1
+    ctrl.dispatch(Command::Pause);
+    let events = ctrl.dispatch(Command::Play);
+    assert!(
+        has_playing(&events),
+        "Play must emit PlaybackStateChanged(playing)"
+    );
+    let has_track_changed = events.iter().any(|e| matches!(e, Event::TrackChanged(_)));
+    assert!(!has_track_changed, "Play must NOT emit TrackChanged");
+}
+
 // ---------------------------------------------------------------------------
 // Next – RepeatMode::Off
 // ---------------------------------------------------------------------------
