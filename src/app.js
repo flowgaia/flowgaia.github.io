@@ -13,6 +13,37 @@ import { loadState, saveState, getAllDownloadedIds } from './storage.js';
 import { dispatchCommand, onEvent, setWasmDispatch } from './event-bus.js';
 
 // ---------------------------------------------------------------------------
+// PWA install prompt
+// ---------------------------------------------------------------------------
+
+function initInstallPrompt() {
+  let deferredPrompt = null;
+  const btn = document.getElementById('install-btn');
+  if (!btn) return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.classList.remove('hidden');
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      btn.classList.add('hidden');
+    }
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    btn.classList.add('hidden');
+    deferredPrompt = null;
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Theme toggle
 // ---------------------------------------------------------------------------
 
@@ -176,6 +207,22 @@ async function restoreSessionState() {
 
 async function main() {
   initTheme();
+  initInstallPrompt();
+
+  // Register service worker first — before any async work that might fail.
+  // In development (Vite HMR), the cache-first SW strategy causes stale assets
+  // to be served after code changes, breaking hot reload and tab restore.
+  if ('serviceWorker' in navigator) {
+    if (import.meta.env.PROD) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    } else {
+      // Unregister any previously-registered SW so stale cache-first responses
+      // don't cause the page to reload in a loop during development.
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) reg.unregister();
+      });
+    }
+  }
 
   // Initialize WASM
   await init();
@@ -218,21 +265,6 @@ async function main() {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') saveNow();
   });
-
-  // Register service worker in production only.
-  // In development (Vite HMR), the cache-first SW strategy causes stale assets
-  // to be served after code changes, breaking hot reload and tab restore.
-  if ('serviceWorker' in navigator) {
-    if (import.meta.env.PROD) {
-      navigator.serviceWorker.register('/sw.js').catch(console.error);
-    } else {
-      // Unregister any previously-registered SW so stale cache-first responses
-      // don't cause the page to reload in a loop during development.
-      navigator.serviceWorker.getRegistration().then((reg) => {
-        if (reg) reg.unregister();
-      });
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------

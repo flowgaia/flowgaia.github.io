@@ -15,6 +15,17 @@
   <body
     class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans antialiased"
   >
+    <!-- PWA install button (hidden until beforeinstallprompt fires) -->
+    <button
+      id="install-btn"
+      class="hidden fixed top-3 right-14 z-50 p-2 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+      title="Install app"
+    >
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z" />
+      </svg>
+    </button>
+
     <!-- Theme toggle -->
     <button
       id="theme-toggle"
