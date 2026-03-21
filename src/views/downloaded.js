@@ -25,6 +25,11 @@ export function initDownloaded() {
     showStorageInfo();
   });
 
+  // Refresh the list whenever the user navigates to this tab.
+  document.querySelector('.tab[data-tab="downloaded"]')?.addEventListener('click', () => {
+    dispatchCommand({ type: 'LoadDownloaded' });
+  });
+
   // "Play All" button.
   document.getElementById('btn-load-downloaded')?.addEventListener('click', () => {
     dispatchCommand({ type: 'LoadDownloaded' });

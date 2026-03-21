@@ -198,6 +198,12 @@ async function main() {
 
   // Load music library, then restore last session.
   await loadLibrary();
+
+  // Populate the Downloaded tab now that track metadata is available.
+  if (downloadedIds.length > 0) {
+    dispatchCommand({ type: 'LoadDownloaded' });
+  }
+
   await restoreSessionState();
 
   // Save state immediately when the page is hidden or unloaded so the seek
