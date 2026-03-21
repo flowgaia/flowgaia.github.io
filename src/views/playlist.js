@@ -13,7 +13,12 @@
  */
 
 import { dispatchCommand, onEvent } from '../event-bus.js';
-import { downloadTrack, downloadAlbum, isDownloading } from '../download-manager.js';
+import {
+  downloadTrack,
+  downloadAlbum,
+  removeAlbumDownloads,
+  isDownloading,
+} from '../download-manager.js';
 
 /** Cache the last rendered playlist info so download state updates can re-render. */
 let _lastInfo = null;
@@ -103,7 +108,7 @@ export function renderPlaylist(info) {
           </p>
         </div>
         <!-- Actions -->
-        <div class="flex gap-2 mt-2">
+        <div class="flex gap-2 mt-2 flex-wrap">
           <button id="btn-play-all"
             class="text-xs px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-medium hover:opacity-90 transition-opacity">
             Play All
@@ -113,6 +118,14 @@ export function renderPlaylist(info) {
             ${!albumId ? 'disabled title="No album loaded"' : ''}>
             <span id="download-album-label">Download Album</span>
           </button>
+          ${
+            albumId && tracks.some((t) => t.is_downloaded)
+              ? `<button id="btn-remove-downloads"
+              class="text-xs px-3 py-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              Remove Downloads
+            </button>`
+              : ''
+          }
         </div>
       </div>
     </div>
@@ -152,6 +165,21 @@ export function renderPlaylist(info) {
       const downloadedIds = new Set(tracksWithUri.filter((t) => t.uri).map((t) => t.id));
       _lastInfo.tracks.forEach((t) => {
         if (downloadedIds.has(t.id)) t.is_downloaded = true;
+      });
+      renderPlaylist(_lastInfo);
+    }
+  });
+
+  // Wire "Remove Downloads".
+  header.querySelector('#btn-remove-downloads')?.addEventListener('click', async () => {
+    const btn = header.querySelector('#btn-remove-downloads');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'Removing…';
+    await removeAlbumDownloads(tracks.map((t) => t.id));
+    if (_lastInfo) {
+      _lastInfo.tracks.forEach((t) => {
+        t.is_downloaded = false;
       });
       renderPlaylist(_lastInfo);
     }

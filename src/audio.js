@@ -18,6 +18,14 @@ let lastCurrentTime = -1;
 let lastCheckTime = 0;
 /** Blob URL created for the current track (if downloaded); revoked on track change. */
 let _activeBlobUrl = null;
+/**
+ * Tracks what WASM believes the playback state should be.
+ * Updated synchronously by PlaybackStateChanged, which fires in the same event
+ * batch as TrackChanged — but because the TrackChanged handler is async (awaits
+ * getDownloaded), PlaybackStateChanged arrives before the async handler resumes.
+ * Reading _intendedState after the await therefore sees the correct final value.
+ */
+let _intendedState = 'stopped';
 
 // ── Initialise ────────────────────────────────────────────────────────────────
 
@@ -101,23 +109,29 @@ export function initAudio() {
     }
 
     if (uri) {
-      // If a restored seek position is pending (session restore), apply it once
-      // the audio is ready to seek (canplay event), then clear the flag.
+      // If a restored seek position is pending, apply it once the browser has
+      // loaded enough metadata to accept a currentTime assignment.
+      // loadedmetadata fires reliably with preload='metadata' even without play().
       const restoredTime = window._restoredCurrentTime;
       if (restoredTime > 0) {
         delete window._restoredCurrentTime;
-        const applySeek = () => {
-          audio.currentTime = restoredTime;
-          audio.removeEventListener('canplay', applySeek);
-        };
-        audio.addEventListener('canplay', applySeek);
+        audio.addEventListener(
+          'loadedmetadata',
+          () => {
+            audio.currentTime = restoredTime;
+          },
+          { once: true },
+        );
       }
 
       audio.src = uri;
-      // Do NOT call play() here. PlaybackStateChanged("playing") fires immediately
-      // after TrackChanged for user-initiated actions and will call play() then.
-      // Calling play() here would violate the browser's autoplay policy on session
-      // restore (where PlaybackStateChanged("paused") follows instead).
+      // By the time we reach here (after the await), PlaybackStateChanged has
+      // already fired and updated _intendedState.  Play only when WASM intended
+      // playing — this prevents autoplay-policy violations on session restore
+      // (where WASM restores as "paused", not "playing").
+      if (_intendedState === 'playing') {
+        audio.play().catch((err) => console.warn('[audio] play() rejected:', err));
+      }
     } else {
       // No URI (demo data) — just reset position
       audio.pause();
@@ -129,7 +143,10 @@ export function initAudio() {
   });
 
   onEvent('PlaybackStateChanged', (state) => {
+    _intendedState = state;
     if (state === 'playing') {
+      // Only play if audio already has a src set (TrackChanged may still be
+      // awaiting getDownloaded, in which case it will call play() itself).
       if (audio.paused && audio.src) {
         audio.play().catch((err) => console.warn('[audio] play() rejected:', err));
       }

@@ -423,7 +423,10 @@ impl Controller {
             track_ids,
             current_position: None,
         };
-        self.state.current_queue = Queue::new();
+        // Queue is intentionally NOT cleared here so that tracks queued from a
+        // previous album survive browsing to a different album.  The queue is
+        // cleared when the user explicitly plays a track (handle_play_track) or
+        // when it is naturally exhausted during playback.
         self.state.current_album_index = self.state.albums.iter().position(|a| a.id == album_id);
         self.state.current_album_id = Some(album_id.to_string());
         if self.state.shuffle_enabled {

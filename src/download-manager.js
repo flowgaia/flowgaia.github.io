@@ -70,6 +70,18 @@ export async function removeDownload(trackId) {
 }
 
 /**
+ * Remove all downloaded tracks for an album from IndexedDB and update the WASM core.
+ *
+ * @param {string[]} trackIds - IDs of every track in the album to remove.
+ */
+export async function removeAlbumDownloads(trackIds) {
+  for (const id of trackIds) {
+    await removeDownloaded(id);
+  }
+  await _syncDownloaded();
+}
+
+/**
  * Returns true if `trackId` is currently being downloaded.
  *
  * @param {string} trackId
