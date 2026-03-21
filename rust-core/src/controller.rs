@@ -84,6 +84,10 @@ pub struct PersistedState {
     /// Absent in older saved states — treated as `None`.
     #[serde(default)]
     pub current_album_id: Option<String>,
+    /// Track IDs in the transient queue at the time of save.  Absent in older
+    /// saved states — defaults to empty (no queue).
+    #[serde(default)]
+    pub queue_track_ids: Vec<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -640,11 +644,24 @@ impl Controller {
                 self.state.albums.iter().position(|a| &a.id == album_id);
         }
 
+        // Restore the queue — only keep IDs that are still in the library.
+        self.state.current_queue = Queue::new();
+        for id in saved.queue_track_ids {
+            if self.state.tracks.contains_key(&id) {
+                self.state.current_queue.add(id);
+            }
+        }
+
         let mut events: Vec<Event> = vec![
             Event::ShuffleChanged(self.state.shuffle_enabled),
             Event::RepeatChanged(self.repeat_str()),
             Event::PlaylistUpdated(self.make_playlist_info()),
         ];
+
+        // Emit QueueUpdated so the queue panel reflects the restored queue.
+        if !self.state.current_queue.track_ids.is_empty() {
+            events.push(Event::QueueUpdated(self.make_queue_info()));
+        }
 
         // Emit TrackChanged so the mini-player shows the last track.
         if let Some(track_id) = &saved.current_track_id {

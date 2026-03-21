@@ -651,6 +651,7 @@ fn restore_state_restores_playlist_and_cursor() {
         repeat_mode: music_core::model::RepeatMode::All,
         shuffle_enabled: false,
         current_album_id: None,
+        queue_track_ids: vec![],
     };
     let events = ctrl.dispatch(Command::RestoreState(saved));
 
@@ -679,6 +680,7 @@ fn restore_state_filters_unknown_track_ids() {
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
         current_album_id: None,
+        queue_track_ids: vec![],
     };
     ctrl.dispatch(Command::RestoreState(saved));
 
@@ -700,6 +702,7 @@ fn restore_state_clamps_out_of_bounds_cursor() {
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
         current_album_id: None,
+        queue_track_ids: vec![],
     };
     ctrl.dispatch(Command::RestoreState(saved));
 
@@ -851,6 +854,7 @@ fn restore_state_restores_current_album_id() {
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
         current_album_id: Some("album2".into()),
+        queue_track_ids: vec![],
     };
     ctrl.dispatch(Command::RestoreState(saved));
 
@@ -872,6 +876,7 @@ fn restore_state_no_track_changed_when_current_track_unknown() {
         repeat_mode: music_core::model::RepeatMode::Off,
         shuffle_enabled: false,
         current_album_id: None,
+        queue_track_ids: vec![],
     };
     let events = ctrl.dispatch(Command::RestoreState(saved));
 
@@ -928,4 +933,94 @@ fn reorder_playlist_cursor_follows_playing_track() {
     // Cursor should follow t1 to its new position 3.
     assert_eq!(payload.current_position, Some(3));
     assert_eq!(payload.tracks[3].id, "t1");
+}
+
+// ---------------------------------------------------------------------------
+// Queue persistence (RestoreState with queue_track_ids)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn restore_state_restores_queue() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(4);
+    let saved = PersistedState {
+        current_track_id: Some("t1".into()),
+        playlist_track_ids: vec!["t1".into(), "t2".into(), "t3".into(), "t4".into()],
+        playlist_position: Some(0),
+        original_playlist_order: vec!["t1".into(), "t2".into(), "t3".into(), "t4".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+        current_album_id: None,
+        queue_track_ids: vec!["t3".into(), "t4".into()],
+    };
+
+    let events = ctrl.dispatch(Command::RestoreState(saved));
+
+    // QueueUpdated should be emitted with the restored queue.
+    let queue_info = events.iter().find_map(|e| {
+        if let Event::QueueUpdated(q) = e {
+            Some(q.clone())
+        } else {
+            None
+        }
+    });
+    let queue_info = queue_info.expect("Expected QueueUpdated event");
+    assert_eq!(queue_info.tracks.len(), 2);
+    assert_eq!(queue_info.tracks[0].id, "t3");
+    assert_eq!(queue_info.tracks[1].id, "t4");
+}
+
+#[test]
+fn restore_state_queue_skips_unknown_tracks() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(3);
+    let saved = PersistedState {
+        current_track_id: None,
+        playlist_track_ids: vec!["t1".into()],
+        playlist_position: Some(0),
+        original_playlist_order: vec!["t1".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+        current_album_id: None,
+        // "ghost" is not in the library; "t2" is valid.
+        queue_track_ids: vec!["ghost".into(), "t2".into()],
+    };
+
+    let events = ctrl.dispatch(Command::RestoreState(saved));
+
+    let queue_info = events.iter().find_map(|e| {
+        if let Event::QueueUpdated(q) = e {
+            Some(q.clone())
+        } else {
+            None
+        }
+    });
+    let queue_info = queue_info.expect("Expected QueueUpdated event");
+    // "ghost" is filtered out; only "t2" survives.
+    assert_eq!(queue_info.tracks.len(), 1);
+    assert_eq!(queue_info.tracks[0].id, "t2");
+}
+
+#[test]
+fn restore_state_empty_queue_no_queue_updated_event() {
+    use music_core::controller::PersistedState;
+
+    let mut ctrl = controller_with_tracks(3);
+    let saved = PersistedState {
+        current_track_id: None,
+        playlist_track_ids: vec!["t1".into()],
+        playlist_position: None,
+        original_playlist_order: vec!["t1".into()],
+        repeat_mode: music_core::model::RepeatMode::Off,
+        shuffle_enabled: false,
+        current_album_id: None,
+        queue_track_ids: vec![],
+    };
+
+    let events = ctrl.dispatch(Command::RestoreState(saved));
+
+    // No QueueUpdated emitted when queue is empty.
+    assert!(!events.iter().any(|e| matches!(e, Event::QueueUpdated(_))));
 }

@@ -49,6 +49,7 @@ let _sessionState = {
   shuffle_enabled: false,
   current_album_id: null,
   current_time: 0,
+  queue_track_ids: [],
 };
 
 let _saveTimer = null;
@@ -125,6 +126,11 @@ function initStatePersistence() {
     // Convert lowercase event values ('off','all','one') to Rust enum names.
     const map = { off: 'Off', all: 'All', one: 'One' };
     _sessionState.repeat_mode = map[mode] ?? 'Off';
+    scheduleSave();
+  });
+
+  onEvent('QueueUpdated', (info) => {
+    _sessionState.queue_track_ids = (info.tracks || []).map((t) => t.id);
     scheduleSave();
   });
 }
