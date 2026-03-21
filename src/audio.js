@@ -112,13 +112,22 @@ export function initAudio() {
       // If a restored seek position is pending, apply it once the browser has
       // loaded enough metadata to accept a currentTime assignment.
       // loadedmetadata fires reliably with preload='metadata' even without play().
+      // IMPORTANT: keep window._restoredCurrentTime set until the seek is applied
+      // so that PlaybackStateChanged("playing") can detect a pending seek and
+      // defer play() to this listener — preventing playback from starting at 0
+      // on slow networks when the user presses Play before loadedmetadata fires.
       const restoredTime = window._restoredCurrentTime;
       if (restoredTime > 0) {
-        delete window._restoredCurrentTime;
         audio.addEventListener(
           'loadedmetadata',
           () => {
+            delete window._restoredCurrentTime;
             audio.currentTime = restoredTime;
+            // If the user pressed Play while the seek was pending, start
+            // playback now from the correct restored position.
+            if (_intendedState === 'playing') {
+              audio.play().catch((err) => console.warn('[audio] play() rejected:', err));
+            }
           },
           { once: true },
         );
@@ -129,7 +138,9 @@ export function initAudio() {
       // already fired and updated _intendedState.  Play only when WASM intended
       // playing — this prevents autoplay-policy violations on session restore
       // (where WASM restores as "paused", not "playing").
-      if (_intendedState === 'playing') {
+      // Skip play() if a seek is still pending — the loadedmetadata listener
+      // will call play() after setting the correct position.
+      if (_intendedState === 'playing' && !window._restoredCurrentTime) {
         audio.play().catch((err) => console.warn('[audio] play() rejected:', err));
       }
     } else {
@@ -145,6 +156,10 @@ export function initAudio() {
   onEvent('PlaybackStateChanged', (state) => {
     _intendedState = state;
     if (state === 'playing') {
+      // If a seek-on-restore is still pending (loadedmetadata hasn't fired yet),
+      // defer play() to the loadedmetadata listener so playback always starts
+      // from the restored position rather than from position 0.
+      if (window._restoredCurrentTime) return;
       // Only play if audio already has a src set (TrackChanged may still be
       // awaiting getDownloaded, in which case it will call play() itself).
       if (audio.paused && audio.src) {
