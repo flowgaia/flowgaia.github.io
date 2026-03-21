@@ -28,6 +28,12 @@
   @apply font-semibold text-neutral-900 dark:text-neutral-100;
 }
 
+/* Full-player control active states (shuffle, repeat) */
+#full-shuffle.active,
+#full-repeat.active {
+  @apply text-neutral-900 dark:text-neutral-100;
+}
+
 /* Sortable drag states */
 .sortable-ghost {
   @apply opacity-40;
