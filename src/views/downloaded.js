@@ -7,9 +7,12 @@
  * Each track row has a delete button to remove the offline copy.
  */
 
+import Sortable from 'sortablejs';
 import { dispatchCommand, onEvent } from '../event-bus.js';
 import { getAllDownloadedIds } from '../storage.js';
 import { removeDownload } from '../download-manager.js';
+
+let sortable = null;
 
 export function initDownloaded() {
   // Render downloaded list when WASM emits the event.
@@ -30,10 +33,9 @@ export function initDownloaded() {
     dispatchCommand({ type: 'LoadDownloaded' });
   });
 
-  // "Play All" button.
+  // "Play All" button — play from the Downloaded playlist without leaving the tab.
   document.getElementById('btn-load-downloaded')?.addEventListener('click', () => {
     dispatchCommand({ type: 'LoadDownloaded' });
-    document.querySelector('.tab[data-tab="playlist"]')?.click();
   });
 }
 
@@ -46,6 +48,7 @@ function renderDownloadedList(tracks) {
   if (tracks.length === 0) {
     list.innerHTML =
       '<li class="py-8 text-center text-sm text-neutral-400 dark:text-neutral-500">No downloaded songs yet</li>';
+    destroySortable();
     return;
   }
 
@@ -56,9 +59,8 @@ function renderDownloadedList(tracks) {
                hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
         data-track-id="${escapeAttr(track.id)}"
         data-index="${idx}">
-      <span class="w-5 text-center text-xs tabular-nums text-neutral-400 dark:text-neutral-500 flex-shrink-0">
-        ${track.track_number ?? idx + 1}
-      </span>
+      <span class="drag-handle w-5 text-center text-neutral-300 dark:text-neutral-600 flex-shrink-0 cursor-grab active:cursor-grabbing"
+            aria-label="Drag to reorder">⠿</span>
       <div class="flex-1 min-w-0">
         <span class="block text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">${escapeHtml(track.title)}</span>
         <span class="block text-xs text-neutral-500 dark:text-neutral-400 truncate">${escapeHtml(track.artist)}</span>
@@ -78,10 +80,10 @@ function renderDownloadedList(tracks) {
     )
     .join('');
 
-  // Click row (not delete button) to play the track.
+  // Click row (not drag handle or delete button) to play the track.
   list.querySelectorAll('.downloaded-item').forEach((item) => {
     item.addEventListener('click', (e) => {
-      if (e.target.closest('.delete-btn')) return;
+      if (e.target.closest('.delete-btn') || e.target.closest('.drag-handle')) return;
       dispatchCommand({ type: 'PlayTrack', payload: item.dataset.trackId });
     });
   });
@@ -97,6 +99,33 @@ function renderDownloadedList(tracks) {
       showStorageInfo();
     });
   });
+
+  // Drag-to-reorder via SortableJS.
+  initSortable(list);
+}
+
+// ── SortableJS ─────────────────────────────────────────────────────────────────
+
+function initSortable(list) {
+  destroySortable();
+  sortable = Sortable.create(list, {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: (evt) => {
+      if (evt.oldIndex === evt.newIndex) return;
+      dispatchCommand({
+        type: 'ReorderPlaylist',
+        payload: { from: evt.oldIndex, to: evt.newIndex },
+      });
+    },
+  });
+}
+
+function destroySortable() {
+  if (sortable) {
+    sortable.destroy();
+    sortable = null;
+  }
 }
 
 // ── Storage info ──────────────────────────────────────────────────────────────

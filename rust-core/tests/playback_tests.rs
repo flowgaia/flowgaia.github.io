@@ -878,3 +878,54 @@ fn restore_state_no_track_changed_when_current_track_unknown() {
     // No TrackChanged since the track isn't in the catalogue.
     assert!(!events.iter().any(|e| matches!(e, Event::TrackChanged(_))));
 }
+
+// ---------------------------------------------------------------------------
+// ReorderPlaylist
+// ---------------------------------------------------------------------------
+
+#[test]
+fn reorder_playlist_moves_track_and_emits_playlist_updated() {
+    let mut ctrl = controller_with_tracks(4);
+
+    // Initial order: t1, t2, t3, t4. Move t1 from index 0 to index 2.
+    let events = ctrl.dispatch(Command::ReorderPlaylist { from: 0, to: 2 });
+    let payload = events
+        .iter()
+        .find_map(|e| {
+            if let Event::PlaylistUpdated(p) = e {
+                Some(p.clone())
+            } else {
+                None
+            }
+        })
+        .expect("Expected PlaylistUpdated");
+
+    // [t2, t3, t1, t4]
+    assert_eq!(payload.tracks[0].id, "t2");
+    assert_eq!(payload.tracks[1].id, "t3");
+    assert_eq!(payload.tracks[2].id, "t1");
+    assert_eq!(payload.tracks[3].id, "t4");
+}
+
+#[test]
+fn reorder_playlist_cursor_follows_playing_track() {
+    let mut ctrl = controller_with_tracks(4);
+    ctrl.dispatch(Command::PlayTrack("t1".into()));
+
+    // Playing t1 (position 0). Move t1 to position 3.
+    let events = ctrl.dispatch(Command::ReorderPlaylist { from: 0, to: 3 });
+    let payload = events
+        .iter()
+        .find_map(|e| {
+            if let Event::PlaylistUpdated(p) = e {
+                Some(p.clone())
+            } else {
+                None
+            }
+        })
+        .expect("Expected PlaylistUpdated");
+
+    // Cursor should follow t1 to its new position 3.
+    assert_eq!(payload.current_position, Some(3));
+    assert_eq!(payload.tracks[3].id, "t1");
+}

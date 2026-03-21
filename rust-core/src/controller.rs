@@ -36,6 +36,8 @@ pub enum Command {
     RemoveFromQueue(usize),
     /// Move a queue entry from one index to another.
     ReorderQueue { from: usize, to: usize },
+    /// Move a playlist entry from one index to another (e.g. Downloaded tab reorder).
+    ReorderPlaylist { from: usize, to: usize },
     /// Toggle shuffle on/off for the current playlist.
     ToggleShuffle,
     /// Set the repeat mode: `"off"`, `"all"`, or `"one"`.
@@ -209,6 +211,7 @@ impl Controller {
             Command::AddToQueue(id) => self.handle_add_to_queue(id),
             Command::RemoveFromQueue(idx) => self.handle_remove_from_queue(idx),
             Command::ReorderQueue { from, to } => self.handle_reorder_queue(from, to),
+            Command::ReorderPlaylist { from, to } => self.handle_reorder_playlist(from, to),
             Command::ToggleShuffle => self.handle_toggle_shuffle(),
             Command::SetRepeat(mode) => self.handle_set_repeat(mode),
             Command::Search(query) => self.handle_search(query),
@@ -458,6 +461,39 @@ impl Controller {
         self.state.current_queue.reorder(from, to);
         let queue_info = self.make_queue_info();
         vec![Event::QueueUpdated(queue_info)]
+    }
+
+    fn handle_reorder_playlist(&mut self, from: usize, to: usize) -> Vec<Event> {
+        let ids = &mut self.state.current_playlist.track_ids;
+        let len = ids.len();
+        if from >= len || to >= len || from == to {
+            return vec![];
+        }
+        let item = ids.remove(from);
+        ids.insert(to, item);
+
+        // Keep original_playlist_order in sync so shuffle-off restores correctly.
+        let orig = &mut self.state.original_playlist_order;
+        if from < orig.len() && to < orig.len() {
+            let item2 = orig.remove(from);
+            orig.insert(to, item2);
+        }
+
+        // Adjust cursor so the playing track doesn't change.
+        if let Some(pos) = self.state.current_playlist.current_position {
+            self.state.current_playlist.current_position = Some(if pos == from {
+                to
+            } else if from < pos && pos <= to {
+                pos - 1
+            } else if to <= pos && pos < from {
+                pos + 1
+            } else {
+                pos
+            });
+        }
+
+        let playlist_info = self.make_playlist_info();
+        vec![Event::PlaylistUpdated(playlist_info)]
     }
 
     fn handle_toggle_shuffle(&mut self) -> Vec<Event> {
