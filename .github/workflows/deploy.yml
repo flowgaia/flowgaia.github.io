@@ -60,7 +60,9 @@ jobs:
 
       - name: Copy audio and image assets to dist
         run: |
-          cp -r assets dist/assets
+          cp -r assets/audio dist/assets/audio
+          cp -r assets/brand dist/assets/brand
+          cp -r assets/images dist/assets/images
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
