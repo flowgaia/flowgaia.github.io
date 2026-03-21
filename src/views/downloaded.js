@@ -3,8 +3,9 @@
  *
  * On load, reads persisted download IDs from IndexedDB and informs the WASM
  * core so it can construct the Downloaded playlist.
- * The "Play All" button sends LoadDownloaded and switches to Playlist.
+ * The "Play All" button sends LoadDownloaded and plays the first track.
  * Each track row has a delete button to remove the offline copy.
+ * The currently-playing track is highlighted with bold text.
  */
 
 import Sortable from 'sortablejs';
@@ -13,11 +14,26 @@ import { getAllDownloadedIds } from '../storage.js';
 import { removeDownload } from '../download-manager.js';
 
 let sortable = null;
+let _currentTrackId = null;
+let _cachedTracks = [];
+/** Set when "Play All" is clicked; consumed by the next DownloadedLoaded event. */
+let _playOnLoad = false;
 
 export function initDownloaded() {
   // Render downloaded list when WASM emits the event.
   onEvent('DownloadedLoaded', (info) => {
-    renderDownloadedList(info?.tracks || []);
+    _cachedTracks = info?.tracks || [];
+    renderDownloadedList(_cachedTracks);
+    if (_playOnLoad && _cachedTracks.length > 0) {
+      _playOnLoad = false;
+      dispatchCommand({ type: 'PlayTrack', payload: _cachedTracks[0].id });
+    }
+  });
+
+  // Keep playing indicator in sync with WASM playback state.
+  onEvent('TrackChanged', (info) => {
+    _currentTrackId = info?.track_id ?? null;
+    updatePlayingIndicator();
   });
 
   // On startup, tell WASM which track IDs are locally available.
@@ -33,8 +49,9 @@ export function initDownloaded() {
     dispatchCommand({ type: 'LoadDownloaded' });
   });
 
-  // "Play All" button — play from the Downloaded playlist without leaving the tab.
+  // "Play All" button — load the downloaded playlist and start playback.
   document.getElementById('btn-load-downloaded')?.addEventListener('click', () => {
+    _playOnLoad = true;
     dispatchCommand({ type: 'LoadDownloaded' });
   });
 }
@@ -53,16 +70,18 @@ function renderDownloadedList(tracks) {
   }
 
   list.innerHTML = tracks
-    .map(
-      (track, idx) => `
+    .map((track, idx) => {
+      const isPlaying = track.id === _currentTrackId;
+      return `
     <li class="downloaded-item flex items-center gap-3 px-4 py-2.5 cursor-pointer
-               hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
+               hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors
+               ${isPlaying ? 'bg-neutral-50 dark:bg-neutral-800/60' : ''}"
         data-track-id="${escapeAttr(track.id)}"
         data-index="${idx}">
       <span class="drag-handle w-5 text-center text-neutral-300 dark:text-neutral-600 flex-shrink-0 cursor-grab active:cursor-grabbing"
             aria-label="Drag to reorder">⠿</span>
       <div class="flex-1 min-w-0">
-        <span class="block text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">${escapeHtml(track.title)}</span>
+        <span class="block text-sm ${isPlaying ? 'font-semibold' : 'font-medium'} text-neutral-900 dark:text-neutral-100 truncate">${escapeHtml(track.title)}</span>
         <span class="block text-xs text-neutral-500 dark:text-neutral-400 truncate">${escapeHtml(track.artist)}</span>
       </div>
       <span class="hidden xs:inline text-xs text-neutral-400 dark:text-neutral-500 tabular-nums flex-shrink-0">${formatDuration(track.duration)}</span>
@@ -76,8 +95,8 @@ function renderDownloadedList(tracks) {
         </svg>
       </button>
     </li>
-  `,
-    )
+  `;
+    })
     .join('');
 
   // Click row (not drag handle or delete button) to play the track.
@@ -102,6 +121,25 @@ function renderDownloadedList(tracks) {
 
   // Drag-to-reorder via SortableJS.
   initSortable(list);
+}
+
+/**
+ * Apply / remove the playing highlight without a full re-render.
+ * Called when TrackChanged fires after the list is already rendered.
+ */
+function updatePlayingIndicator() {
+  const list = document.getElementById('downloaded-list');
+  if (!list) return;
+  list.querySelectorAll('.downloaded-item').forEach((item) => {
+    const isPlaying = item.dataset.trackId === _currentTrackId;
+    item.classList.toggle('bg-neutral-50', isPlaying);
+    item.classList.toggle('dark:bg-neutral-800/60', isPlaying);
+    const titleEl = item.querySelector('span.block.text-sm');
+    if (titleEl) {
+      titleEl.classList.toggle('font-semibold', isPlaying);
+      titleEl.classList.toggle('font-medium', !isPlaying);
+    }
+  });
 }
 
 // ── SortableJS ─────────────────────────────────────────────────────────────────

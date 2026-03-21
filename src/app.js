@@ -222,8 +222,16 @@ async function main() {
   // Register service worker in production only.
   // In development (Vite HMR), the cache-first SW strategy causes stale assets
   // to be served after code changes, breaking hot reload and tab restore.
-  if ('serviceWorker' in navigator && import.meta.env.PROD) {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  if ('serviceWorker' in navigator) {
+    if (import.meta.env.PROD) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    } else {
+      // Unregister any previously-registered SW so stale cache-first responses
+      // don't cause the page to reload in a loop during development.
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) reg.unregister();
+      });
+    }
   }
 }
 

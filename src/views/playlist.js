@@ -76,6 +76,13 @@ export function renderPlaylist(info) {
   const artist = albumMeta?.artist ?? tracks[0]?.artist ?? '';
   const totalDuration = tracks.reduce((s, t) => s + (t.duration || 0), 0);
 
+  // Hide "Download Album" when every downloadable track is already downloaded.
+  const downloadableTracks = tracks.filter(
+    (t) => !!window._musicLibrary?.tracks?.find((lt) => lt.id === t.id)?.uri,
+  );
+  const allDownloaded =
+    downloadableTracks.length > 0 && downloadableTracks.every((t) => t.is_downloaded);
+
   // ── Rebuild header ──────────────────────────────────────────────────────────
   let header = document.getElementById('playlist-header');
   if (!header) {
@@ -113,11 +120,15 @@ export function renderPlaylist(info) {
             class="text-xs px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-medium hover:opacity-90 transition-opacity">
             Play All
           </button>
-          <button id="btn-download-album"
+          ${
+            !allDownloaded
+              ? `<button id="btn-download-album"
             class="text-xs px-3 py-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
             ${!albumId ? 'disabled title="No album loaded"' : ''}>
             <span id="download-album-label">Download Album</span>
-          </button>
+          </button>`
+              : ''
+          }
           ${
             albumId && tracks.some((t) => t.is_downloaded)
               ? `<button id="btn-remove-downloads"
