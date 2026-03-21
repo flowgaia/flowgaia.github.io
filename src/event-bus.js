@@ -25,6 +25,7 @@ export function dispatchCommand(cmd) {
     console.warn('[event-bus] WASM not ready; command dropped:', cmd);
     return;
   }
+  console.debug('[cmd] →', cmd.type, cmd.payload ?? '');
   try {
     const json = JSON.stringify(cmd);
     const eventsJson = _wasmDispatch(json);
@@ -56,6 +57,7 @@ export function onEvent(type, handler) {
 
 /** Dispatch a single event object to all registered handlers. */
 function emitEvent(event) {
+  console.debug('[event] ←', event.type, event.payload ?? '');
   // Typed listeners receive payload
   const typed = _listeners[event.type] || [];
   typed.forEach((h) => {

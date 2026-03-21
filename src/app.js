@@ -61,13 +61,43 @@ function scheduleSave() {
     if (audio && audio.currentTime > 0 && isFinite(audio.currentTime)) {
       _sessionState.current_time = audio.currentTime;
     }
+    console.log('[state] save', {
+      track: _sessionState.current_track_id,
+      pos: _sessionState.playlist_position,
+      t: _sessionState.current_time?.toFixed(1),
+      album: _sessionState.current_album_id,
+    });
     saveState({ ..._sessionState }).catch(console.error);
   }, 1000);
+}
+
+/**
+ * Capture current_time immediately and persist — called on page hide/unload
+ * so the seek position is accurate even if no state event fired recently.
+ */
+function saveNow() {
+  const audio = window._audio;
+  if (audio && audio.currentTime > 0 && isFinite(audio.currentTime)) {
+    _sessionState.current_time = audio.currentTime;
+    // Synchronous localStorage backup because IndexedDB writes may not complete
+    // before the browser terminates the page on unload.
+    try {
+      localStorage.setItem('_lastCurrentTime', String(audio.currentTime));
+    } catch {}
+  }
+  clearTimeout(_saveTimer);
+  saveState({ ..._sessionState }).catch(console.error);
 }
 
 function initStatePersistence() {
   onEvent('TrackChanged', (info) => {
     _sessionState.current_track_id = info.track_id;
+    // Keep playlist_position in sync with the playing track so restore always
+    // returns to the right position (PlaylistUpdated is not emitted on Next/Prev).
+    const pos = _sessionState.playlist_track_ids.indexOf(info.track_id);
+    if (pos !== -1) {
+      _sessionState.playlist_position = pos;
+    }
     scheduleSave();
   });
 
@@ -101,7 +131,27 @@ function initStatePersistence() {
 
 async function restoreSessionState() {
   const saved = await loadState();
-  if (!saved || !saved.playlist_track_ids?.length) return;
+
+  if (!saved || !saved.playlist_track_ids?.length) {
+    console.log('[state] restore: nothing saved');
+    return;
+  }
+
+  // A localStorage entry written on page-hide may be more accurate than the
+  // debounced IndexedDB value (which is only refreshed 1 s after the last event).
+  const ltTime = parseFloat(localStorage.getItem('_lastCurrentTime') || '0');
+  if (ltTime > (saved.current_time || 0)) {
+    saved.current_time = ltTime;
+  }
+  localStorage.removeItem('_lastCurrentTime');
+
+  console.log('[state] restore', {
+    track: saved.current_track_id,
+    pos: saved.playlist_position,
+    t: saved.current_time?.toFixed(1),
+    album: saved.current_album_id,
+    tracks: saved.playlist_track_ids?.length,
+  });
 
   // Sync the in-memory snapshot so subsequent saves don't clobber the restore.
   _sessionState = { ..._sessionState, ...saved };
@@ -149,6 +199,13 @@ async function main() {
   // Load music library, then restore last session.
   await loadLibrary();
   await restoreSessionState();
+
+  // Save state immediately when the page is hidden or unloaded so the seek
+  // position is accurate even if the debounced save hasn't fired yet.
+  window.addEventListener('pagehide', saveNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveNow();
+  });
 
   // Register service worker
   if ('serviceWorker' in navigator) {
