@@ -3,33 +3,11 @@
 
 const CACHE_NAME = 'music-player-v2';
 
-// Shell files to pre-cache on install.
-//
-// Vite hashes and bundles JS/CSS — their filenames are unknown at SW
-// authoring time.  We therefore only pre-cache the document root and the
-// static data files whose names are stable.  The cache-first fetch handler
-// below will populate all other assets (hashed JS, CSS, WASM) on first visit
-// and serve them offline from then on.
-const SHELL_FILES = ['/', '/manifest.json', '/music.json'];
-
-// ── Install: cache shell ────────────────────────────────────────────────────
+// ── Install ─────────────────────────────────────────────────────────────────
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        // Cache individually so one failure doesn't break everything
-        return Promise.allSettled(
-          SHELL_FILES.map((url) =>
-            cache.add(url).catch((err) => {
-              console.warn('[SW] Failed to cache:', url, err);
-            }),
-          ),
-        );
-      })
-      .then(() => self.skipWaiting()),
-  );
+  // Activate immediately — don't wait for old tabs to close
+  event.waitUntil(self.skipWaiting());
 });
 
 // ── Activate: remove old caches ─────────────────────────────────────────────
@@ -43,6 +21,14 @@ self.addEventListener('activate', (event) => {
       )
       .then(() => self.clients.claim()),
   );
+});
+
+// ── Message: force update check when client comes online ────────────────────
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'CHECK_UPDATE') {
+    self.registration.update();
+  }
 });
 
 // ── Fetch: strategy per request type ────────────────────────────────────────
@@ -62,14 +48,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // WASM files: network-first (they may update with builds)
-  if (url.pathname.includes('/wasm/')) {
+  // HTML navigation: always network-first so deployments propagate immediately.
+  // Falls back to cache for offline use.
+  if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // Everything else: cache-first
-  event.respondWith(cacheFirst(request));
+  // Vite-hashed assets (/assets/…): safe to cache forever — hash changes when
+  // content changes, so cache-first is correct and efficient.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Data files (music.json, manifest.json, etc.): stale-while-revalidate —
+  // serve cached version immediately (no blocking network request), then
+  // update cache in the background so the next load gets fresh data.
+  event.respondWith(staleWhileRevalidate(request));
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -163,6 +159,25 @@ async function networkFirst(request) {
     const cached = await caches.match(request);
     return cached || new Response('Offline', { status: 503 });
   }
+}
+
+/**
+ * Stale-while-revalidate: serve from cache immediately if available,
+ * fetch from network in the background to update the cache for next time.
+ * Falls back to network-first if nothing is cached yet.
+ */
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const fetchAndUpdate = fetch(request)
+    .then((response) => {
+      if (response.ok) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => null);
+
+  return cached || (await fetchAndUpdate) || new Response('Offline', { status: 503 });
 }
 
 /** Cache-first; falls back to network and caches the result. */

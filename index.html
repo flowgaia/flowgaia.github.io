@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>FlowGaia</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -15,6 +15,20 @@
   <body
     class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans antialiased"
   >
+    <!-- Update banner (hidden until a new SW activates) -->
+    <div
+      id="update-banner"
+      class="hidden fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-3 px-4 py-3 bg-violet-600 text-white text-sm shadow-lg"
+    >
+      <span>A new version is available.</span>
+      <button
+        id="update-btn"
+        class="shrink-0 px-3 py-1 rounded-full bg-white text-violet-700 font-semibold text-xs hover:bg-violet-50"
+      >
+        Reload
+      </button>
+    </div>
+
     <!-- PWA install button (hidden until beforeinstallprompt fires) -->
     <button
       id="install-btn"
