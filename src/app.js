@@ -215,6 +215,61 @@ async function main() {
   if ('serviceWorker' in navigator) {
     if (import.meta.env.PROD) {
       navigator.serviceWorker.register('/sw.js').catch(console.error);
+
+      // Show update banner when a new SW takes over.
+      // Only treat it as an update if there was already a SW controlling this
+      // page — otherwise it's just the first install.
+      const hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController) return;
+        const banner = document.getElementById('update-banner');
+        const btn = document.getElementById('update-btn');
+        if (banner) banner.classList.remove('hidden');
+        if (btn) btn.addEventListener('click', () => location.reload());
+      });
+
+      // When the device comes back online, tell the SW to check for an update
+      // so users always get the latest version after being offline.
+      window.addEventListener('online', () => {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.active?.postMessage('CHECK_UPDATE');
+        });
+      });
+
+      // Pull-to-refresh: swipe down from the top while online to reload.
+      // The scroll container blocks the native overscroll, so we implement it.
+      (() => {
+        const THRESHOLD = 80; // px pulled before triggering
+        let startY = 0;
+        let pulling = false;
+
+        const scrollEl = document.querySelector('.flex-1.overflow-y-auto');
+        if (!scrollEl) return;
+
+        scrollEl.addEventListener(
+          'touchstart',
+          (e) => {
+            if (scrollEl.scrollTop === 0) {
+              startY = e.touches[0].clientY;
+              pulling = true;
+            }
+          },
+          { passive: true },
+        );
+
+        scrollEl.addEventListener(
+          'touchend',
+          (e) => {
+            if (!pulling) return;
+            const delta = e.changedTouches[0].clientY - startY;
+            pulling = false;
+            if (delta > THRESHOLD && navigator.onLine) {
+              location.reload();
+            }
+          },
+          { passive: true },
+        );
+      })();
     } else {
       // Unregister any previously-registered SW so stale cache-first responses
       // don't cause the page to reload in a loop during development.
@@ -225,9 +280,24 @@ async function main() {
   }
 
   // Initialize WASM
-  await init();
-  console.log(greet('FlowGaia'));
-  setWasmDispatch(wasmDispatch);
+  try {
+    await init();
+    console.log(greet('FlowGaia'));
+    setWasmDispatch(wasmDispatch);
+  } catch (err) {
+    console.error('[FlowGaia] WASM init failed:', err);
+    document.body.innerHTML = `
+      <div style="padding:2rem;font-family:system-ui;color:#fff;background:#0a0a0a;min-height:100vh">
+        <h1 style="margin:0 0 1rem">FlowGaia failed to start</h1>
+        <p style="color:#aaa">WebAssembly initialization error:</p>
+        <pre style="white-space:pre-wrap;color:#f87171;margin:0.5rem 0">${err.message || err}</pre>
+        <p style="margin-top:1.5rem;color:#666;font-size:0.85rem">
+          ${navigator.userAgent}<br><br>
+          Try updating Chrome or clearing site data (Settings → Site Settings → flowgaia.github.io → Clear &amp; Reset).
+        </p>
+      </div>`;
+    return;
+  }
 
   // Wire up persistence listeners before any events are emitted.
   initStatePersistence();

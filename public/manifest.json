@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "FlowGaia",
   "short_name": "FlowGaia",
   "description": "FlowGaia Music Player",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
